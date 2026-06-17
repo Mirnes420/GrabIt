@@ -185,47 +185,131 @@ nav {
 }
 
 /* ── RESPONSIVE RESPACING ────────────────── */
+/* ── CONSOLIDATED RESPONSIVE ARCHITECTURE ────────────────── */
 @media (max-width: 900px) {
     .hero {
         grid-template-columns: 1fr;
-        /* Stack vertically for mobile viewports */
-        gap: 3rem;
-        padding-top: 7rem;
-        text-align: center;
+        /* Drop side-by-side split layout */
+        position: relative;
+        padding: 6rem 1rem 2rem;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
     }
 
+    /* Transform Video Container into Fullscreen Background */
     .hero-video-wrapper {
+        position: absolute;
+        inset: 0;
         width: 100%;
-        max-width: 320px;
-        /* Restricts excessive height scaling on handheld screens */
-    }
-}
-
-/* ── RESPONSIVE RESPACING ────────────────── */
-@media (max-width: 900px) {
-    .hero {
-        grid-template-columns: 1fr;
-        gap: 3rem;
-        padding-top: 7rem;
-        text-align: center;
+        height: 100%;
+        max-width: 100% !important;
+        /* Forces layout breakout */
+        border-radius: 0;
+        /* Flush edge-to-edge layout */
+        border: none;
+        z-index: 1;
     }
 
+    /* Deep Vignette Overlap Filter */
+    .video-overlay {
+        background: radial-gradient(circle,
+                rgba(0, 0, 0, 0.2) 0%,
+                rgba(0, 0, 0, 0.7) 100%);
+        z-index: 2;
+    }
+
+    /* Dark Glass Morphic Text Panel Overlay */
     .hero-content {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 2.5rem 1.75rem;
+        background: rgba(252, 252, 252, 0.932);
+        /* Translucent dark ground */
+        backdrop-filter: blur(20px) saturate(160%);
+        /* Frosted glass styling */
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
         align-items: center;
         text-align: center;
     }
 
+    /* Flip Typography to White for Contrast On Dark Glass */
     .typing-text {
+        color: var(--black);
         margin: 0 auto 1.5rem;
+        white-space: normal;
+        /* Force standard text wrap handling */
+        border-right: none;
+        width: 100%;
+    }
+
+    .hero-sub {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 2rem;
+    }
+
+    .hero-eyebrow {
+        color: rgba(255, 255, 255, 0.7);
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-eyebrow span {
+        color: var(--white);
     }
 
     .hero-actions {
         justify-content: center;
+        width: 100%;
     }
 
-    .hero-video-wrapper {
-        max-width: 40%;
-        /* Scales neatly downward on tablets and mobile screens */
+    .btn-primary {
+        background: var(--white);
+        color: var(--black);
+        width: 100%;
+        /* Full span action loops for mobile utility */
+        text-align: center;
+    }
+
+    .btn-ghost {
+        color: var(--white);
+        border-color: rgba(255, 255, 255, 0.3);
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-ghost:hover {
+        border-color: var(--white);
+    }
+}
+
+@media (max-width: 600px) {
+    .use-case {
+        width: 300px;
+        padding: 2rem 1.5rem;
+    }
+
+    .step {
+        border-right: 1px solid var(--gray-200);
+        border-bottom: none;
+    }
+
+    .step:last-child {
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    footer {
+        flex-direction: column;
+        text-align: center;
     }
 }
 
