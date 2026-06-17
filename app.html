@@ -11,21 +11,31 @@
 
 <body>
     <div class="app-container">
-        <!-- Hidden canvas for capturing video frames -->
         <canvas id="hidden-canvas" style="display: none;"></canvas>
 
-        <!-- Fullscreen camera feed -->
         <video id="camera-feed" autoplay playsinline muted></video>
 
-        <!-- Top bar: status only (tokens shown in pre-call card) -->
         <div class="top-bar">
             <div class="status-badge">
                 <div id="status-indicator" class="status-indicator"></div>
                 <span id="status-text">Disconnected</span>
             </div>
+
+            <div class="auth-menu">
+                <div id="auth-profile-btn" class="auth-profile-btn">👤 <span id="display-user">Guest</span></div>
+                <div id="auth-dropdown" class="auth-dropdown" style="display: none;">
+                    <div id="auth-logged-out-view">
+                        <input type="text" id="login-username" placeholder="Enter User ID" />
+                        <button id="login-submit-btn" class="auth-btn-action">Link Account</button>
+                    </div>
+                    <div id="auth-logged-in-view" style="display: none;">
+                        <p id="profile-tracking-info">Tracking Active</p>
+                        <button id="logout-btn" class="auth-btn-action auth-btn-danger">Disconnect ID</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Pre-session card (centered) -->
         <div id="start-screen" class="start-screen">
             <div class="pre-call-card">
                 <div class="pre-call-logo">🔧 DIY Fix</div>
@@ -36,10 +46,34 @@
             </div>
         </div>
 
-        <!-- In-call bottom bar -->
+        <div id="disclaimer-overlay" class="disclaimer-overlay" style="display: none;">
+            <div class="disclaimer-card">
+                <h3>⚠️ Safety and Liability Warning</h3>
+                <div class="disclaimer-body">
+                    <p>GrabIt provides experimental real-time AI guidance for educational and troubleshooting use cases.
+                    </p>
+                    <p><strong>If your task involves structural utility frameworks (high-voltage electrical lines,
+                            pressurized gas lines, primary sewage lines, or complex automotive machinery), you must
+                            notify and hire a licensed professional engineer.</strong></p>
+                    <p>By proceeding, you explicitly assume all risk and acknowledge that conversations are logged for
+                        regulatory and safety compliance audits.</p>
+                </div>
+                <div class="disclaimer-ack">
+                    <label>
+                        <input type="checkbox" id="disclaimer-checkbox"> I understand, accept the liability limits, and
+                        wish to proceed.
+                    </label>
+                </div>
+                <div class="disclaimer-actions">
+                    <button id="disclaimer-cancel" class="btn-disclaimer-cancel">Cancel</button>
+                    <button id="disclaimer-accept" class="btn-disclaimer-accept" disabled>Accept & Initialize
+                        Call</button>
+                </div>
+            </div>
+        </div>
+
         <div id="call-bar" class="call-bar" style="display: none;">
             <button id="flip-btn" class="call-btn" title="Flip Camera">
-                <!-- Flip icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28">
                     <path
                         d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
@@ -48,7 +82,6 @@
             </button>
 
             <button id="stop-btn" class="call-btn call-btn-hangup" title="End Call">
-                <!-- Hangup icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
                     <path
                         d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.21 2.2z"

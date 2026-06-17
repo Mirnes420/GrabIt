@@ -417,3 +417,165 @@ body {
 .link-btn:hover {
     opacity: 0.7;
 }
+
+/* ── AUTH PROFILES DROPDOWN MENU ────────── */
+.auth-menu {
+    position: relative;
+    font-family: 'Inter', sans-serif;
+}
+
+.auth-profile-btn {
+    background: #0a0a0a;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.auth-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background: #ffffff;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 200;
+}
+
+.auth-dropdown input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+}
+
+.auth-btn-action {
+    width: 100%;
+    background: #0a0a0a;
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-btn-danger {
+    background: #dc2626;
+}
+
+#profile-tracking-info {
+    font-size: 0.8rem;
+    color: #16a34a;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+/* ── INTERACTIVE SAFETY DISCLAIMER OVERLAY ── */
+.disclaimer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.disclaimer-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1.5px solid #e5e5e5;
+}
+
+.disclaimer-card h3 {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #0a0a0a;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.disclaimer-body {
+    font-size: 0.9rem;
+    color: #525252;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.disclaimer-body p {
+    margin-bottom: 0.75rem;
+}
+
+.disclaimer-ack {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0a0a0a;
+    display: flex;
+    align-items: center;
+}
+
+.disclaimer-ack label {
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.disclaimer-ack input {
+    margin-top: 0.15rem;
+}
+
+.disclaimer-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-disclaimer-cancel {
+    background: transparent;
+    border: 1.5px solid #e5e5e5;
+    color: #525252;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-disclaimer-accept {
+    background: #0a0a0a;
+    border: none;
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-disclaimer-accept:disabled {
+    background: #a3a3a3;
+    cursor: not-allowed;
+}
