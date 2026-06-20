@@ -729,9 +729,7 @@ body {
     object-fit: contain;
 }
 
-
 .liability-risk-banner {
-
     border-radius: 1em;
     width: 50%;
     box-sizing: border-box;
@@ -751,13 +749,13 @@ body {
     color: #ef4444;
 }
 
-
 /* app footer */
 .app-footer {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
+    box-sizing: border-box; /* Ensures padding doesn't cause horizontal overflow */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -766,4 +764,18 @@ body {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 15;
+}
+
+@media (max-width: 600px) {
+    .app-footer {
+        /* FIXED: Removed the hardcoded height. Let the content dictate container height */
+        flex-direction: column; /* Stacks items vertically on mobile if needed */
+        gap: 0.5rem; 
+        padding: 0.75rem;
+    }
+    
+    .liability-risk-banner {
+        width: 100%; /* Spans full horizontal profile on mobile screens */
+        text-align: center; /* Centers alignment for mobile readability */
+    }
 }
