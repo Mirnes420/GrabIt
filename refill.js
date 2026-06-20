@@ -1,4 +1,4 @@
-const USER_ID = "test_user";
+const USER_ID = localStorage.getItem("grabit_tracked_user") || "guest_user";
 
 const BACKEND_NGROK_DOMAIN = "cringing-niece-playpen.ngrok-free.dev";
 const httpApiBase = `https://${BACKEND_NGROK_DOMAIN}`;
@@ -19,38 +19,41 @@ async function fetchBalance() {
 
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-        const amount = parseInt(e.target.getAttribute('data-amount'));
-        e.target.innerText = "Processing...";
+        const amountCents = parseInt(e.target.getAttribute('data-amount-cents')); // e.g., 500 for €5.00
+        const amountTokens = parseInt(e.target.getAttribute('data-amount')); // e.g., 100000 tokens
+        console.log("sending tokens", amountTokens, "for amount", amountCents);
+        e.target.innerText = "Redirecting...";
         e.target.disabled = true;
         
         try {
-            const res = await fetch(`${httpApiBase}/api/refill-tokens`, {
+            // 1. Ask your backend to generate a secure Stripe payment link
+            const res = await fetch(`${httpApiBase}/api/payments/create-checkout-session`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
                     'ngrok-skip-browser-warning': 'true'
                 },
-                body: JSON.stringify({ user_id: USER_ID, amount: amount })
+                body: JSON.stringify({ user_id: USER_ID, amount: amountCents, amountTokens: amountTokens })
             });
-            const data = await res.json();
-            document.getElementById("current-balance").innerText = data.new_balance.toLocaleString();
             
-            // Success animation
-            e.target.innerText = "Purchased!";
-            e.target.style.backgroundColor = "var(--success)";
-            setTimeout(() => {
-                e.target.innerText = "Buy Now";
-                e.target.style.backgroundColor = "var(--primary)";
-                e.target.disabled = false;
-            }, 2000);
+            const data = await res.json();
+            
+            if (data.url) {
+                // 2. Send the user to the Stripe payment screen
+                window.location.href = data.url;
+            } else {
+                throw new Error("No session checkout URL returned from server.");
+            }
             
         } catch (error) {
-            console.error("Purchase failed", error);
+            console.error("Redirect to checkout failed", error);
             e.target.innerText = "Failed";
             e.target.style.backgroundColor = "var(--danger)";
+            e.target.disabled = false;
         }
     });
 });
+
 
 // Load initial balance
 fetchBalance();

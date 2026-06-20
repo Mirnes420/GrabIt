@@ -45,19 +45,15 @@ body {
 
 /* ── Top bar ────────────────────────────────────────────── */
 .top-bar {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    z-index: 10;
+    width: 100%;
+    z-index: 100;
+    /* Forces it to sit on top of the start-screen container */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 2rem;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--gray-200);
 }
 
 .status-badge {
@@ -121,6 +117,8 @@ body {
 /* ── Pre-session start screen ───────────────────────────── */
 .start-screen {
     position: fixed;
+    display: flex;
+    flex-direction: column;
     inset: 0;
     z-index: 20;
     display: flex;
@@ -578,4 +576,194 @@ body {
 .btn-disclaimer-accept:disabled {
     background: #a3a3a3;
     cursor: not-allowed;
+}
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+    color: inherit;
+    border-bottom-color: #3b82f6;
+}
+
+.form-field {
+    margin-bottom: 16px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.form-field input {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.submit-action-btn {
+    width: 100%;
+    padding: 14px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.oauth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.oauth-divider:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.oauth-divider:not(:empty)::after {
+    margin-left: .5em;
+}
+
+.google-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: inherit;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 15px;
+}
+
+.google-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.alert-banner {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    display: none;
+}
+
+/* ── additional app styles ────────────────────────── */ 
+.pre-call-logo img {
+    width: auto;
+    height: 3em;
+    object-fit: contain;
+}
+
+
+.liability-risk-banner {
+
+    border-radius: 1em;
+    width: 50%;
+    box-sizing: border-box;
+}
+
+.liability-risk-banner .alert-icon {
+    font-size: 1.1rem;
+}
+
+.liability-risk-banner .banner-text {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: white;
+}
+
+.liability-risk-banner .banner-text strong {
+    color: #ef4444;
+}
+
+
+/* app footer */
+.app-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background: var(--black);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 15;
 }

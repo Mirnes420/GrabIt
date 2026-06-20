@@ -1,33 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const player = document.getElementById("hero-playlist-player");
-        let currentTrack = 1;
-        const maxTracks = 5;
 
-        if (player) {
-            player.addEventListener("ended", () => {
-                currentTrack++;
-                if (currentTrack > maxTracks) {
-                    currentTrack = 1; // Loops straight back to public/diy1.mp4
-                }
-
-                // Updates the file source dynamically string matching: diy1, diy2, diy3...
-                player.src = `./public/diy${currentTrack}.mp4`;
-
-                // Forces the browser to flush the old video stream pipeline and load the new file
-                player.load();
-
-                // Forces playback initiation on track swap
-                player.play().catch(error => {
-                    console.log("Autoplay waiting for user interaction:", error);
-                });
-            });
-        }
-    });
-</script>
 
 <head>
     <meta charset="UTF-8">
@@ -71,7 +45,7 @@
 
         <div class="hero-video-wrapper">
             <div class="video-overlay"></div>
-            <video id="hero-playlist-player" src="./public/diy1.mp4" autoplay muted playsinline>
+            <video id="hero-playlist-player" src="./public/diy.mp4" autoplay muted playsinline>
                 Your browser does not support the video tag.
             </video>
         </div>

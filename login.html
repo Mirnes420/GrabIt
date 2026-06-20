@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - GrabIt DIY</title>
+    <link rel="icon" type="image/png" href="./public/logo.png">
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-card minimal-box">
+
+            <div class="logo-container">
+                <img src="./public/logo.png" alt="GrabIt Logo" class="logo-img" onerror="this.style.display='none'">
+                <h2 style="font-size: 22px; font-weight: 800; margin-top: 12px;" id="auth-title">Welcome to GrabIt</h2>
+            </div>
+
+            <div id="error-banner" class="alert-banner"></div>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+                <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <form id="auth-form">
+                <div class="form-field">
+                    <label for="user-email">Account Email</label>
+                    <input type="email" id="user-email" required placeholder="mechanic@example.com"
+                        autocomplete="email">
+                </div>
+
+                <div class="form-field">
+                    <label for="user-password">Password</label>
+                    <input type="password" id="user-password" required placeholder="••••••••"
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="action-submit-btn" class="btn btn-primary submit-action-btn">Authenticate
+                    Account</button>
+            </form>
+
+            <div class="oauth-divider">or</div>
+
+            <button type="button" id="google-oauth-btn" class="google-btn">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#EA4335"
+                        d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.33 0 3.35 2.69 1.439 6.613l3.827 3.152z" />
+                    <path fill="#4285F4"
+                        d="M23.49 12.275c0-.796-.073-1.564-.205-2.301H12v4.364h6.454a5.572 5.572 0 0 1-2.409 3.664v3.033h3.873c2.264-2.083 3.572-5.156 3.572-8.76z" />
+                    <path fill="#FBBC05"
+                        d="M5.266 14.235A7.09 7.09 0 0 1 4.909 12c0-.791.137-1.55.357-2.265L1.44 6.583A11.91 11.91 0 0 0 0 12c0 1.927.455 3.745 1.259 5.373l4.007-3.138z" />
+                    <path fill="#34A853"
+                        d="M12 24c3.24 0 5.955-1.073 7.945-2.913l-3.873-3.033c-1.073.714-2.445 1.141-4.072 1.141-3.11 0-5.741-2.095-6.686-4.918L1.455 17.34C3.386 21.29 7.373 24 12 24z" />
+                </svg>
+                Continue with Google
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_NGROK_DOMAIN = "cringing-niece-playpen.ngrok-free.dev";
+        const authForm = document.getElementById('auth-form');
+        const errorBanner = document.getElementById('error-banner');
+        const submitBtn = document.getElementById('action-submit-btn');
+        const googleBtn = document.getElementById('google-oauth-btn');
+
+        let currentMode = 'login'; // 'login' or 'register'
+
+        function switchTab(mode) {
+            currentMode = mode;
+            errorBanner.style.display = 'none';
+
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+
+            submitBtn.innerText = mode === 'login' ? "Authenticate Account" : "Create Account";
+        }
+
+        // Handle Standard Email/Password Auth & Registration Pipelines
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBanner.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerText = currentMode === 'login' ? "Verifying..." : "Creating Account...";
+
+            const email = document.getElementById('user-email').value.trim();
+            const password = document.getElementById('user-password').value;
+
+            // Dynamically direct traffic to your backend routes based on tab selection
+            const endpoint = currentMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+
+            try {
+                const response = await fetch(`https://${BACKEND_NGROK_DOMAIN}${endpoint}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    localStorage.setItem("grabit_tracked_user", data.user_id);
+                    localStorage.setItem("grabit_user_email", email);
+                    localStorage.setItem("grabit_auth_token", data.access_token);
+                    window.location.href = "app.html";
+                } else {
+                    throw new Error(data.detail || "Authentication sequence failed.");
+                }
+            } catch (err) {
+                errorBanner.innerText = err.message;
+                errorBanner.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = currentMode === 'login' ? "Authenticate Account" : "Create Account";
+            }
+        });
+
+        // Handle Google Auth Handshake Redirect
+        googleBtn.addEventListener('click', () => {
+            // Point directly to your Supabase instance redirect URL setup
+            // Supabase projects handle OAuth providers via standard HTTP redirects
+            const SUPABASE_PROJECT_URL = "https://your-actual-project-id.supabase.co";
+            window.location.href = `${SUPABASE_PROJECT_URL}/auth/v1/authorize?provider=google&redirect_to=https://${BACKEND_NGROK_DOMAIN}/app.html`;
+        });
+    </script>
+</body>
+
+</html>

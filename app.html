@@ -10,6 +10,21 @@
 </head>
 
 <body>
+    <script>
+        (function () {
+            const token = localStorage.getItem("grabit_auth_token");
+            const user = localStorage.getItem("grabit_tracked_user");
+            const email = localStorage.getItem("grabit_user_email");
+            if (!token || !user || user === "guest_user") {
+                // Instantly wipe poisoned or half-configured states and bounce to login
+                localStorage.removeItem("grabit_auth_token");
+                localStorage.removeItem("grabit_tracked_user");
+                localStorage.removeItem("grabit_user_email");
+                window.location.href = "login.html";
+            }
+        })();
+    </script>
+
     <div class="app-container">
         <canvas id="hidden-canvas" style="display: none;"></canvas>
 
@@ -25,7 +40,12 @@
                 <div id="auth-profile-btn" class="auth-profile-btn">👤 <span id="display-user">Guest</span></div>
                 <div id="auth-dropdown" class="auth-dropdown" style="display: none;">
                     <div id="auth-logged-out-view">
-                        <input type="text" id="login-username" placeholder="Enter User ID" />
+                        <div style="margin-bottom: 8px;">
+                            <input type="email" id="login-email" placeholder="Enter Email"
+                                style="width: 100%; box-sizing: border-box; margin-bottom: 4px;" />
+                            <input type="password" id="login-password" placeholder="Enter Password"
+                                style="width: 100%; box-sizing: border-box;" />
+                        </div>
                         <button id="login-submit-btn" class="auth-btn-action">Link Account</button>
                     </div>
                     <div id="auth-logged-in-view" style="display: none;">
@@ -37,13 +57,26 @@
         </div>
 
         <div id="start-screen" class="start-screen">
+        
+
             <div class="pre-call-card">
-                <div class="pre-call-logo">🔧 DIY Fix</div>
+                <div class="pre-call-logo"><img src="./public/logo.png" alt="DIY Fix"></div>
                 <p class="pre-call-label">Your token balance</p>
                 <div class="pre-call-tokens" id="token-display">---</div>
                 <a href="refill.html" class="pre-call-refill">+ Buy Tokens</a>
                 <button id="start-btn" class="pre-call-start">📞 Start Call</button>
             </div>
+            <div class="app-footer">
+               <div class="liability-risk-banner">
+                <span class="alert-icon">⚠️</span>
+                <div class="banner-text">
+                    <strong>Critical Guardrails:</strong> Do not use this engine on live structural utility frameworks, main pressurized gas pipelines, or high voltage sub stations. Complex dangerous installations require a <strong>licensed engineer</strong>.
+                </div>
+            </div>
+            </div>
+        </div>
+        
+
         </div>
 
         <div id="disclaimer-overlay" class="disclaimer-overlay" style="display: none;">

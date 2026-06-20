@@ -1,9 +1,10 @@
 // --- DYNAMIC USER AUTH TRACKING STATE SYSTEM ---
 let USER_ID = localStorage.getItem("grabit_tracked_user") || "guest_user";
+let USER_EMAIL = localStorage.getItem("grabit_user_email") || "Not Logged In";
 
 const BACKEND_NGROK_DOMAIN = "cringing-niece-playpen.ngrok-free.dev";
 const httpApiBase = `https://${BACKEND_NGROK_DOMAIN}`;
-const wsUrl = `wss://${BACKEND_NGROK_DOMAIN}/api/live-fix`;
+const wsUrl = `wss://${BACKEND_NGROK_DOMAIN}/api/live-fix/${USER_ID}`;
 
 // DOM Interface Elements Map
 const videoEl = document.getElementById('camera-feed');
@@ -52,7 +53,7 @@ let audioInputSource = null;
 
 // ── AUTH MANAGER ACTIONS ───────────────────
 function syncAuthUI() {
-    displayUser.innerText = USER_ID === "guest_user" ? "Guest" : USER_ID;
+    displayUser.innerText = USER_ID === "guest_user" ? "Guest" : USER_EMAIL;
     if (USER_ID === "guest_user") {
         loggedOutView.style.display = "block";
         loggedInView.style.display = "none";
@@ -165,6 +166,26 @@ async function fetchBalance() {
         console.error("Could not fetch balance", e);
     }
 }
+
+function checkPaymentStatus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.get('payment') === 'success') {
+        // 1. Notify the user instantly
+        alert("🎉 Payment successful! Your tokens have been credited.");
+        
+        // 2. Fetch the fresh database balance to show the added tokens
+        if (typeof fetchBalance === "function") {
+            fetchBalance();
+        }
+        
+        // 3. Clean up the URL bar so the message doesn't keep popping up on refreshes
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+}
+
+// Initialize status check
+checkPaymentStatus();
 
 // ── WEBSOCKET PIPELINE WITH TRANSCRIPT TRACKING ──
 async function startSession() {
