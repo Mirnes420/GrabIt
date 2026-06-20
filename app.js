@@ -35,6 +35,7 @@ const disclaimerOverlay = document.getElementById('disclaimer-overlay');
 const disclaimerCheckbox = document.getElementById('disclaimer-checkbox');
 const disclaimerAccept = document.getElementById('disclaimer-accept');
 const disclaimerCancel = document.getElementById('disclaimer-cancel');
+const tokenErrorBanner = document.getElementById('token-error-banner');
 
 // Core Execution State
 let currentFacingMode = 'environment';
@@ -50,6 +51,22 @@ let gainNode = null;
 let nextAudioStartTime = 0;
 let audioInputProcessor = null;
 let audioInputSource = null;
+statusIndicator.className = 'status-indicator error';
+statusText.innerText = 'Disconnected';
+startScreen.style.display = 'flex';
+callBar.style.display = 'none';
+    
+// --- EVALUATE TOKEN EXHAUSTION ERROR DISPLAY ---
+if (closeCode === 4002) {
+    if (tokenErrorBanner) {
+        tokenErrorBanner.innerText = "Insufficient tokens. Please purchase a top-up package to continue.";
+        tokenErrorBanner.style.display = 'block';
+    }
+} else {
+    if (tokenErrorBanner) tokenErrorBanner.style.display = 'none';
+}
+
+fetchBalance();
 
 // ── AUTH MANAGER ACTIONS ───────────────────
 function syncAuthUI() {
@@ -214,19 +231,23 @@ async function startSession() {
             sendInterval = setInterval(captureAndSendFrame, 500);
             startAudioCapture();
         };
-
         ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
             if (msg.error) {
                 errorMsg.innerText = msg.error;
                 errorMsg.style.display = 'block';
                 setTimeout(() => { errorMsg.style.display = 'none'; }, 5000);
-                if (msg.error.includes("Refill") || msg.error.includes("tokens")) stopSession();
+                
+                // FIXED: Pass 4002 straight to the handler here
+                if (msg.error.includes("Refill") || msg.error.includes("tokens") || msg.error.includes("Insufficient")) {
+                    stopSession(4002);
+                } else {
+                    stopSession();
+                }
             } else if (msg.type === "audio") {
                 const arrayBuffer = base64ToArrayBuffer(msg.data);
                 playPCM16(arrayBuffer);
             }
-
             // SAFETY TRANSCRIPT TRACKING LAYER
             // Intercept text data blocks directly inside the active message pump loop
             if (msg.type === "text" || msg.transcript) {
@@ -244,7 +265,9 @@ async function startSession() {
             if (Math.random() < 0.2) fetchBalance();
         };
 
-        ws.onclose = () => { stopSession(); };
+        ws.onclose = (event) => { 
+    stopSession(event.code); 
+};;
     } catch (err) {
         console.error("Error starting session", err);
         errorMsg.innerText = "Camera/Mic access denied or WebSocket connection failed.";
@@ -292,7 +315,7 @@ function captureAndSendFrame() {
     ws.send(JSON.stringify({ type: "video", data: b64Data }));
 }
 
-async function stopSession() {
+async function stopSession(closeCode) {
     if (sendInterval) clearInterval(sendInterval);
 
     // Save/Ship local session log records down to backend API hooks for validation metrics
@@ -307,7 +330,10 @@ async function stopSession() {
         audioInputSource = null;
     }
     if (ws) {
-        ws.close();
+        // Only trigger close if it's currently active to prevent recursion loops
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+        }
         ws = null;
     }
     if (mediaStream) {
@@ -319,9 +345,15 @@ async function stopSession() {
     statusText.innerText = 'Disconnected';
     startScreen.style.display = 'flex';
     callBar.style.display = 'none';
+    
+    // --- EVALUATE TOKEN EXHAUSTION ERROR DISPLAY ---
+    if (closeCode === 4002) {
+        errorMsg.innerText = "Insufficient tokens. Please purchase a top-up package to continue.";
+        errorMsg.style.display = 'block';
+    }
+
     fetchBalance();
 }
-
 // REST Client Dispatch Loop to archive conversation transcripts for regulatory compliance
 async function shipTranscriptToBackend(transcriptLog) {
     try {

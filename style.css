@@ -779,3 +779,27 @@ body {
         text-align: center; /* Centers alignment for mobile readability */
     }
 }
+
+
+/* ── Token error banner ───────────────────────────── */
+.token-error-alert {
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgb(239, 68, 68);
+    color: rgb(248, 113, 113);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+    line-height: 1.4;
+    animation: pulseShake 0.3s ease-in-out;
+}
+
+@keyframes pulseShake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+}
