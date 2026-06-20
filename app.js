@@ -19,6 +19,11 @@ const statusIndicator = document.getElementById('status-indicator');
 const statusText = document.getElementById('status-text');
 const tokenDisplay = document.getElementById('token-display');
 const errorMsg = document.getElementById('error-message');
+const skillSelectEl = document.getElementById('skill-select');
+
+// Target Error Banner UI Context Node
+const tokenErrorBanner = document.getElementById('token-error-banner');
+const tokenWarning = document.getElementById('token-warning');
 
 // New Auth DOM Hooks
 const authProfileBtn = document.getElementById('auth-profile-btn');
@@ -35,7 +40,6 @@ const disclaimerOverlay = document.getElementById('disclaimer-overlay');
 const disclaimerCheckbox = document.getElementById('disclaimer-checkbox');
 const disclaimerAccept = document.getElementById('disclaimer-accept');
 const disclaimerCancel = document.getElementById('disclaimer-cancel');
-const tokenErrorBanner = document.getElementById('token-error-banner');
 
 // Core Execution State
 let currentFacingMode = 'environment';
@@ -43,6 +47,7 @@ let ws = null;
 let mediaStream = null;
 let sendInterval = null;
 let currentSessionTranscript = []; // Active conversation session logging history store
+let isSessionStopping = false;
 
 // Audio Pipelines
 let playbackAudioContext = null;
@@ -51,22 +56,6 @@ let gainNode = null;
 let nextAudioStartTime = 0;
 let audioInputProcessor = null;
 let audioInputSource = null;
-statusIndicator.className = 'status-indicator error';
-statusText.innerText = 'Disconnected';
-startScreen.style.display = 'flex';
-callBar.style.display = 'none';
-    
-// --- EVALUATE TOKEN EXHAUSTION ERROR DISPLAY ---
-if (closeCode === 4002) {
-    if (tokenErrorBanner) {
-        tokenErrorBanner.innerText = "Insufficient tokens. Please purchase a top-up package to continue.";
-        tokenErrorBanner.style.display = 'block';
-    }
-} else {
-    if (tokenErrorBanner) tokenErrorBanner.style.display = 'none';
-}
-
-fetchBalance();
 
 // ── AUTH MANAGER ACTIONS ───────────────────
 function syncAuthUI() {
@@ -178,6 +167,12 @@ async function fetchBalance() {
         if (res.ok) {
             const data = await res.json();
             tokenDisplay.innerText = data.balance.toLocaleString();
+            if (data.balance < 1000) {
+                tokenWarning.innerText = "Low token balance. Consider purchasing more tokens to avoid interruptions.";
+                tokenWarning.style.display = 'block';
+            } else {
+                tokenWarning.style.display = 'none';
+            }
         }
     } catch (e) {
         console.error("Could not fetch balance", e);
@@ -188,15 +183,10 @@ function checkPaymentStatus() {
     const urlParams = new URLSearchParams(window.location.search);
     
     if (urlParams.get('payment') === 'success') {
-        // 1. Notify the user instantly
         alert("🎉 Payment successful! Your tokens have been credited.");
-        
-        // 2. Fetch the fresh database balance to show the added tokens
         if (typeof fetchBalance === "function") {
             fetchBalance();
         }
-        
-        // 3. Clean up the URL bar so the message doesn't keep popping up on refreshes
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 }
@@ -207,6 +197,8 @@ checkPaymentStatus();
 // ── WEBSOCKET PIPELINE WITH TRANSCRIPT TRACKING ──
 async function startSession() {
     errorMsg.style.display = 'none';
+    isSessionStopping = false;
+    if (tokenErrorBanner) tokenErrorBanner.style.display = 'none'; // Clear any residual error visual layouts
     currentSessionTranscript = []; // Reset transcript data log for new telemetry entry
     await initAudioSystems();
 
@@ -218,9 +210,11 @@ async function startSession() {
         videoEl.srcObject = mediaStream;
         canvasEl.width = 640;
         canvasEl.height = 480;
+        const selectedSkill = skillSelectEl ? skillSelectEl.value : 'general';
 
-        // Append explicit track parameters via url query context lines to target backend tracking logic
-        ws = new WebSocket(`${wsUrl}?user_id=${encodeURIComponent(USER_ID)}`);
+        // Modify your WebSocket instantiation line to carry the chosen track:
+        ws = new WebSocket(`${wsUrl}?user_id=${encodeURIComponent(USER_ID)}&skill=${encodeURIComponent(selectedSkill)}`);
+
 
         ws.onopen = () => {
             statusIndicator.className = 'status-indicator connected';
@@ -231,6 +225,7 @@ async function startSession() {
             sendInterval = setInterval(captureAndSendFrame, 500);
             startAudioCapture();
         };
+
         ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
             if (msg.error) {
@@ -238,36 +233,43 @@ async function startSession() {
                 errorMsg.style.display = 'block';
                 setTimeout(() => { errorMsg.style.display = 'none'; }, 5000);
                 
-                // FIXED: Pass 4002 straight to the handler here
                 if (msg.error.includes("Refill") || msg.error.includes("tokens") || msg.error.includes("Insufficient")) {
-                    stopSession(4002);
+                    void stopSession(4002);
                 } else {
-                    stopSession();
+                    void stopSession();
                 }
+            } else if (msg.type === "terminated" && msg.reason) {
+                const terminatedMessage = msg.reason.includes("token") || msg.reason.includes("balance")
+                    ? "Insufficient tokens. Please purchase a top-up package to continue."
+                    : msg.reason;
+                errorMsg.innerText = terminatedMessage;
+                errorMsg.style.display = 'block';
+                void stopSession(4002);
             } else if (msg.type === "audio") {
                 const arrayBuffer = base64ToArrayBuffer(msg.data);
                 playPCM16(arrayBuffer);
             }
-            // SAFETY TRANSCRIPT TRACKING LAYER
-            // Intercept text data blocks directly inside the active message pump loop
+
             if (msg.type === "text" || msg.transcript) {
                 const speechContent = msg.text || msg.transcript;
                 const speakerId = msg.speaker || "AI_Agent";
-
                 currentSessionTranscript.push({
                     timestamp: new Date().toISOString(),
                     speaker: speakerId,
                     text: speechContent
                 });
-                console.log(`[Transcript Log Saved] ${speakerId}: ${speechContent}`);
             }
 
             if (Math.random() < 0.2) fetchBalance();
         };
 
         ws.onclose = (event) => { 
-    stopSession(event.code); 
-};;
+            console.log("[WS CLOSE EVENT DETECTED] Code:", event.code);
+            if (!isSessionStopping) {
+                void stopSession(event.code);
+            }
+        };
+
     } catch (err) {
         console.error("Error starting session", err);
         errorMsg.innerText = "Camera/Mic access denied or WebSocket connection failed.";
@@ -282,7 +284,11 @@ function startAudioCapture() {
     const srcSampleRate = recordAudioContext.sampleRate;
 
     audioInputProcessor.onaudioprocess = (e) => {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        // HARD ENFORCEMENT: Stop collecting microphone blocks immediately if socket drops
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+        
         const inputData = e.inputBuffer.getChannelData(0);
         const resampleRatio = srcSampleRate / targetSampleRate;
         const targetLength = Math.round(inputData.length / resampleRatio);
@@ -300,7 +306,11 @@ function startAudioCapture() {
         const binaryString = String.fromCharCode.apply(null, new Uint8Array(int16Buffer.buffer));
         const base64Audio = window.btoa(binaryString);
 
-        ws.send(JSON.stringify({ type: "audio", data: base64Audio }));
+        try {
+            ws.send(JSON.stringify({ type: "audio", data: base64Audio }));
+        } catch (err) {
+            console.warn("[Stream] Blocked audio frame write on closing socket.");
+        }
     };
 
     audioInputSource.connect(audioInputProcessor);
@@ -308,52 +318,114 @@ function startAudioCapture() {
 }
 
 function captureAndSendFrame() {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    // Hard gate: If socket is missing, closing, or closed, clear the interval loop instantly
+    if (!ws || ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) {
+        console.log("[Stream] Socket dead or closing. Short-circuiting frame capture interval loop.");
+        if (sendInterval) {
+            clearInterval(sendInterval);
+            sendInterval = null;
+        }
+        return;
+    }
+
+    // Additional check: Ensure it's explicitly OPEN before attempting a send
+    if (ws.readyState !== WebSocket.OPEN) return;
+
     ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
     const dataUrl = canvasEl.toDataURL('image/jpeg', 0.6);
     const b64Data = dataUrl.split(',')[1];
-    ws.send(JSON.stringify({ type: "video", data: b64Data }));
+
+    try {
+        ws.send(JSON.stringify({ type: "video", data: b64Data }));
+    } catch (err) {
+        console.warn("[Stream] Blocked video frame write on closing socket.");
+        // Double-safety backup clearing
+        if (sendInterval) {
+            clearInterval(sendInterval);
+            sendInterval = null;
+        }
+    }
 }
 
 async function stopSession(closeCode) {
-    if (sendInterval) clearInterval(sendInterval);
+    if (isSessionStopping) {
+        console.log("[TEARDOWN] Stop already in progress; skipping duplicate teardown.");
+        return;
+    }
+    isSessionStopping = true;
 
-    // Save/Ship local session log records down to backend API hooks for validation metrics
-    if (currentSessionTranscript.length > 0) {
-        await shipTranscriptToBackend(currentSessionTranscript);
+    console.log("[TEARDOWN] Initializing hard stop sequence. Code:", closeCode);
+
+    // 1. Kill the frame transmission loop immediately
+    if (sendInterval) {
+        clearInterval(sendInterval);
+        sendInterval = null;
     }
 
-    if (audioInputProcessor && audioInputSource) {
+    // 2. Shut down microphone tracking processor callbacks dead in their tracks
+    if (audioInputProcessor) {
+        audioInputProcessor.onaudioprocess = null; // Instantly stops audio thread evaluation
         audioInputProcessor.disconnect();
-        audioInputSource.disconnect();
         audioInputProcessor = null;
+    }
+    if (audioInputSource) {
+        audioInputSource.disconnect();
         audioInputSource = null;
     }
+
+    // 3. Kill webcam/microphone hardware states instantly
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => {
+            track.stop();
+            console.log(`[Hardware] Track ${track.kind} killed successfully.`);
+        });
+        mediaStream = null;
+    }
+    if (videoEl) {
+        videoEl.srcObject = null;
+    }
+
+    // 4. Force disconnect and drop the WebSocket pipeline wrapper
     if (ws) {
-        // Only trigger close if it's currently active to prevent recursion loops
+        // Prevent recursive loop execution checks
         if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
             ws.close();
         }
         ws = null;
     }
-    if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        videoEl.srcObject = null;
-    }
 
+    // 5. Instantly bounce UI Panels back to safety viewports
     statusIndicator.className = 'status-indicator error';
     statusText.innerText = 'Disconnected';
     startScreen.style.display = 'flex';
     callBar.style.display = 'none';
-    
-    // --- EVALUATE TOKEN EXHAUSTION ERROR DISPLAY ---
+
+    // 6. Evaluate wallet exhaustion warning states
     if (closeCode === 4002) {
-        errorMsg.innerText = "Insufficient tokens. Please purchase a top-up package to continue.";
-        errorMsg.style.display = 'block';
+        if (tokenErrorBanner) {
+            tokenErrorBanner.innerText = "Insufficient tokens. Please purchase more tokens to continue.";
+            tokenErrorBanner.style.display = 'block';
+        }
+    } else {
+        if (tokenErrorBanner) tokenErrorBanner.style.display = 'none';
     }
 
+    // Refresh balance widget
     fetchBalance();
+
+    // 7. Fire and Forget Telemetry Archive payload down to backend (Does not block UI)
+    if (currentSessionTranscript.length > 0) {
+        const transcriptCopy = [...currentSessionTranscript];
+        currentSessionTranscript = []; // Wipe immediately to avoid duplication states
+        
+        try {
+            await shipTranscriptToBackend(transcriptCopy);
+        } catch (err) {
+            console.error("Delayed transcript archive step failed:", err);
+        }
+    }
 }
+
 // REST Client Dispatch Loop to archive conversation transcripts for regulatory compliance
 async function shipTranscriptToBackend(transcriptLog) {
     try {
@@ -393,7 +465,8 @@ async function flipCamera() {
     startAudioCapture();
 }
 
-stopBtn.addEventListener('click', stopSession);
+// Hook up event handlers explicitly ensuring no code param passes for a clean user hang-up
+stopBtn.addEventListener('click', () => stopSession());
 flipBtn.addEventListener('click', flipCamera);
 
 // Run initial system state loop execution

@@ -59,17 +59,29 @@
         <div id="start-screen" class="start-screen">
         <div id="error-message" class="error-toast"></div>
 
+        
+
             <div class="pre-call-card">
                 <div class="pre-call-logo"><img src="./public/logo.png" alt="DIY Fix"></div>
                 <div id="token-error-banner" class="token-error-alert" style="display: none;"></div>
+                <div class="skill-selection-wrapper" style="margin-bottom: 16px; width: 100%; text-align: left;">
+                    <label for="skill-select" style="font-size: 12px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize AI Knowledge Base:</label>
+                    <select id="skill-select" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
+                        <option value="general">General Troubleshooting (Default)</option>
+                        <option value="plumbing">Plumbing & Water Flow Systems</option>
+                        <option value="pc_hardware">PC Systems & Diagnostics Hardware</option>
+                        <option value="automotive">Basic Mechanical & Small Engine Repair</option>
+                        <option value="networking">Home Networks & Component Wiring</option>
+                    </select>
+                </div>
                 <p class="pre-call-label">Your token balance</p>
                 <div class="pre-call-tokens" id="token-display">---</div>
+                <div id="token-warning" class="token-warning-alert" style="display: none;"></div>
                 <a href="refill.html" class="pre-call-refill">+ Buy Tokens</a>
                 <button id="start-btn" class="pre-call-start">📞 Start Call</button>
             </div>
             <div class="app-footer">
                <div class="liability-risk-banner">
-                <span class="alert-icon">⚠️</span>
                 <div class="banner-text">
                     <strong>Critical Guardrails:</strong> Do not use this engine on live structural utility frameworks, main pressurized gas pipelines, or high voltage sub stations. Complex dangerous installations require a <strong>licensed engineer</strong>.
                 </div>

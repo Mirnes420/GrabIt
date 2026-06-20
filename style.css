@@ -796,6 +796,21 @@ body {
     animation: pulseShake 0.3s ease-in-out;
 }
 
+.token-warning-alert {
+    background-color: rgba(253, 224, 71, 0.15);
+    border: 1px solid rgb(253, 224, 71);
+    color: rgb(202, 138, 4);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+
+
 @keyframes pulseShake {
     0% { transform: translateX(0); }
     25% { transform: translateX(-4px); }
