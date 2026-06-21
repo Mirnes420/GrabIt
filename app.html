@@ -31,38 +31,47 @@
             }
         })();
 
-        window.addEventListener('DOMContentLoaded', () => {
   // Check if the URL contains authentication fragments from Supabase
-  const hash = window.location.hash;
-  
-  if (hash && hash.includes('access_token=')) {
-    // Convert the hash string into an easy-to-use key/value object
-    const params = new URLSearchParams(hash.replace('#', '?'));
-    
-    const accessToken = params.get('access_token');
-    
-    // Decodes the payload from the JWT token to get user metadata safely
-    const base64Url = accessToken.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const tokenData = JSON.parse(window.atob(base64));
-    
-    // Extract the precise unique identifier fields
-    const userId = tokenData.sub; // This is the user's unique ID
-    const email = tokenData.email;
+ window.addEventListener('DOMContentLoaded', () => {
+    // 1. (Your existing token parser code goes here)
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=')) {
+        const params = new URLSearchParams(hash.replace('#', '?'));
+        const accessToken = params.get('access_token');
+        if (accessToken) {
+            const base64Url = accessToken.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const tokenData = JSON.parse(window.atob(base64));
+            
+            localStorage.setItem('user_id', tokenData.sub);
+            localStorage.setItem('user_email', tokenData.email);
+            localStorage.setItem('access_token', accessToken);
+            
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+    }
 
-    // Save them to localStorage so your application can remember who is logged in
-    localStorage.setItem('user_id', userId);
-    localStorage.setItem('user_email', email);
-    localStorage.setItem('access_token', accessToken);
+    // 2. THE FIX: Check if we have a valid session saved
+    const userId = localStorage.getItem('user_id');
+    const loginContainer = document.getElementById('login-container'); // Change to your actual login div ID
+    const appContainer = document.getElementById('app-container');     // Change to your actual main app div ID
 
-    console.log(`Successfully logged in as: ${email} (${userId})`);
-
-    // Clean up the address bar URL instantly so the messy tokens disappear
-    window.history.replaceState(null, null, window.location.pathname);
-    
-    // Optional: Trigger any startup session logic or UI changes here
-    alert(`Welcome back, ${email}!`);
-  }
+    if (userId) {
+        console.log("✅ User session verified:", localStorage.getItem('user_email'));
+        
+        // Hide the login elements and show your main application interface
+        if (loginContainer) loginContainer.style.display = 'none';
+        if (appContainer) appContainer.style.display = 'block';
+        
+        // Optional: If you display user profile details, inject them here
+        const userDisplay = document.getElementById('user-email-display');
+        if (userDisplay) userDisplay.innerText = localStorage.getItem('user_email');
+        
+    } else {
+        console.log("❌ No active session. Showing login screen.");
+        if (loginContainer) loginContainer.style.display = 'block';
+        if (appContainer) appContainer.style.display = 'none';
+    }
 });
     </script>
 
