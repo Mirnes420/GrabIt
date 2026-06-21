@@ -12,67 +12,99 @@
 <body>
     <script>
         if (window.location.hostname.includes('ngrok-free.dev')) {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has('ngrok-skip-browser-warning')) {
-        // Force inject the bypass header into the current browser session
-        document.cookie = "ngrok-skip-browser-warning=true; path=/; SameSite=None; Secure";
-    }
-}
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('ngrok-skip-browser-warning')) {
+                // Force inject the bypass header into the current browser session
+                document.cookie = "ngrok-skip-browser-warning=true; path=/; SameSite=None; Secure";
+            }
+        }
+
+        function parseSupabaseSessionFromHash() {
+            const hash = window.location.hash || '';
+            if (!hash.includes('access_token=')) {
+                return false;
+            }
+
+            const params = new URLSearchParams(hash.replace('#', '?'));
+            const accessToken = params.get('access_token');
+            if (!accessToken) {
+                return false;
+            }
+
+            try {
+                const base64Url = accessToken.split('.')[1];
+                if (!base64Url) {
+                    return false;
+                }
+
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const tokenData = JSON.parse(window.atob(base64));
+                const userId = tokenData.sub || tokenData.user_id || tokenData.id;
+                const email = tokenData.email || tokenData.user_email;
+
+                if (!userId) {
+                    return false;
+                }
+
+                localStorage.setItem('access_token', accessToken);
+                localStorage.setItem('grabit_auth_token', accessToken);
+                localStorage.setItem('user_id', userId);
+                localStorage.setItem('grabit_tracked_user', userId);
+
+                if (email) {
+                    localStorage.setItem('user_email', email);
+                    localStorage.setItem('grabit_user_email', email);
+                }
+
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                return true;
+            } catch (err) {
+                console.warn('Could not parse Supabase auth token from URL hash:', err);
+                return false;
+            }
+        }
+
         (function () {
-            const token = localStorage.getItem("grabit_auth_token");
-            const user = localStorage.getItem("grabit_tracked_user");
-            const email = localStorage.getItem("grabit_user_email");
-            if (!token || !user || user === "guest_user") {
-                // Instantly wipe poisoned or half-configured states and bounce to login
-                localStorage.removeItem("grabit_auth_token");
-                localStorage.removeItem("grabit_tracked_user");
-                localStorage.removeItem("grabit_user_email");
-                window.location.href = "login.html";
+            const parsedFromHash = parseSupabaseSessionFromHash();
+            const token = localStorage.getItem('grabit_auth_token') || localStorage.getItem('access_token');
+            const user = localStorage.getItem('grabit_tracked_user') || localStorage.getItem('user_id');
+            const email = localStorage.getItem('grabit_user_email') || localStorage.getItem('user_email');
+
+            if (!token || !user || user === 'guest_user') {
+                if (!parsedFromHash) {
+                    // Instantly wipe poisoned or half-configured states and bounce back to login
+                    localStorage.removeItem('grabit_auth_token');
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('grabit_tracked_user');
+                    localStorage.removeItem('user_id');
+                    localStorage.removeItem('grabit_user_email');
+                    localStorage.removeItem('user_email');
+                    window.location.replace('login.html');
+                }
             }
         })();
 
-  // Check if the URL contains authentication fragments from Supabase
- window.addEventListener('DOMContentLoaded', () => {
-    // 1. (Your existing token parser code goes here)
-    const hash = window.location.hash;
-    if (hash && hash.includes('access_token=')) {
-        const params = new URLSearchParams(hash.replace('#', '?'));
-        const accessToken = params.get('access_token');
-        if (accessToken) {
-            const base64Url = accessToken.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const tokenData = JSON.parse(window.atob(base64));
-            
-            localStorage.setItem('user_id', tokenData.sub);
-            localStorage.setItem('user_email', tokenData.email);
-            localStorage.setItem('access_token', accessToken);
-            
-            window.history.replaceState(null, null, window.location.pathname);
-        }
-    }
+        window.addEventListener('DOMContentLoaded', () => {
+            const userId = localStorage.getItem('grabit_tracked_user') || localStorage.getItem('user_id');
+            const loginContainer = document.getElementById('login-container');
+            const appContainer = document.getElementById('app-container');
 
-    // 2. THE FIX: Check if we have a valid session saved
-    const userId = localStorage.getItem('user_id');
-    const loginContainer = document.getElementById('login-container'); // Change to your actual login div ID
-    const appContainer = document.getElementById('app-container');     // Change to your actual main app div ID
+            if (userId) {
+                console.log('✅ User session verified:', localStorage.getItem('grabit_user_email') || localStorage.getItem('user_email'));
 
-    if (userId) {
-        console.log("✅ User session verified:", localStorage.getItem('user_email'));
-        
-        // Hide the login elements and show your main application interface
-        if (loginContainer) loginContainer.style.display = 'none';
-        if (appContainer) appContainer.style.display = 'block';
-        
-        // Optional: If you display user profile details, inject them here
-        const userDisplay = document.getElementById('user-email-display');
-        if (userDisplay) userDisplay.innerText = localStorage.getItem('user_email');
-        
-    } else {
-        console.log("❌ No active session. Showing login screen.");
-        if (loginContainer) loginContainer.style.display = 'block';
-        if (appContainer) appContainer.style.display = 'none';
-    }
-});
+                if (loginContainer) loginContainer.style.display = 'none';
+                if (appContainer) appContainer.style.display = 'block';
+
+                const userDisplay = document.getElementById('user-email-display');
+                if (userDisplay) {
+                    userDisplay.innerText = localStorage.getItem('grabit_user_email') || localStorage.getItem('user_email') || 'User';
+                }
+            } else {
+                console.log('❌ No active session. Showing login screen.');
+                if (loginContainer) loginContainer.style.display = 'block';
+                if (appContainer) appContainer.style.display = 'none';
+            }
+        });
     </script>
 
     <div class="app-container">
