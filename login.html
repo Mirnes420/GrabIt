@@ -122,10 +122,15 @@
 
         // Handle Google Auth Handshake Redirect
         googleBtn.addEventListener('click', () => {
-            // Point directly to your Supabase instance redirect URL setup
-            // Supabase projects handle OAuth providers via standard HTTP redirects
-            const SUPABASE_PROJECT_URL = "https://your-actual-project-id.supabase.co";
-            window.location.href = `${SUPABASE_PROJECT_URL}/auth/v1/authorize?provider=google&redirect_to=https://${BACKEND_NGROK_DOMAIN}/app.html`;
+            const SUPABASE_PROJECT_URL = "https://jzjtkjbktnjxijinorim.supabase.co";
+            
+            // Explicitly clean up your ngrok variable to ensure it doesn't contain a trailing slash or schema prefix
+            let cleanDomain = "cringing-niece-playpen.ngrok-free.dev"; 
+            
+            const targetUrl = `${SUPABASE_PROJECT_URL}/auth/v1/authorize?provider=google&redirect_to=https://${cleanDomain}/app.html`;
+            
+            console.log("🚀 Redirecting to OAuth Engine:", targetUrl);
+            window.location.href = targetUrl;
         });
     </script>
 </body>

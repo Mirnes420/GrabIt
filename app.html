@@ -23,6 +23,40 @@
                 window.location.href = "login.html";
             }
         })();
+
+        window.addEventListener('DOMContentLoaded', () => {
+  // Check if the URL contains authentication fragments from Supabase
+  const hash = window.location.hash;
+  
+  if (hash && hash.includes('access_token=')) {
+    // Convert the hash string into an easy-to-use key/value object
+    const params = new URLSearchParams(hash.replace('#', '?'));
+    
+    const accessToken = params.get('access_token');
+    
+    // Decodes the payload from the JWT token to get user metadata safely
+    const base64Url = accessToken.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const tokenData = JSON.parse(window.atob(base64));
+    
+    // Extract the precise unique identifier fields
+    const userId = tokenData.sub; // This is the user's unique ID
+    const email = tokenData.email;
+
+    // Save them to localStorage so your application can remember who is logged in
+    localStorage.setItem('user_id', userId);
+    localStorage.setItem('user_email', email);
+    localStorage.setItem('access_token', accessToken);
+
+    console.log(`Successfully logged in as: ${email} (${userId})`);
+
+    // Clean up the address bar URL instantly so the messy tokens disappear
+    window.history.replaceState(null, null, window.location.pathname);
+    
+    // Optional: Trigger any startup session logic or UI changes here
+    alert(`Welcome back, ${email}!`);
+  }
+});
     </script>
 
     <div class="app-container">
