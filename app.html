@@ -11,6 +11,13 @@
 
 <body>
     <script>
+        if (window.location.hostname.includes('ngrok-free.dev')) {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('ngrok-skip-browser-warning')) {
+        // Force inject the bypass header into the current browser session
+        document.cookie = "ngrok-skip-browser-warning=true; path=/; SameSite=None; Secure";
+    }
+}
         (function () {
             const token = localStorage.getItem("grabit_auth_token");
             const user = localStorage.getItem("grabit_tracked_user");

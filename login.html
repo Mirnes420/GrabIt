@@ -127,9 +127,10 @@
             // Explicitly clean up your ngrok variable to ensure it doesn't contain a trailing slash or schema prefix
             let cleanDomain = "cringing-niece-playpen.ngrok-free.dev"; 
             
-            const targetUrl = `${SUPABASE_PROJECT_URL}/auth/v1/authorize?provider=google&redirect_to=https://${cleanDomain}/app.html`;
+            const redirectTarget = `https://${cleanDomain}/app.html?ngrok-skip-browser-warning=true`;
+    
+            const targetUrl = `${SUPABASE_PROJECT_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTarget)}`;
             
-            console.log("🚀 Redirecting to OAuth Engine:", targetUrl);
             window.location.href = targetUrl;
         });
     </script>
