@@ -818,3 +818,24 @@ body {
     75% { transform: translateX(-2px); }
     100% { transform: translateX(0); }
 }
+
+.brand-logo {
+    font-family: 'Inter', 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 3.5rem;
+    letter-spacing: -2px; /* Tightens the outer letters to the core */
+    color: #ffffff;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+/* The core transformation for the LLI sequence */
+.brand-logo .indicator-bars {
+    color: #00ffaa; /* Electric neon teal/green */
+    font-family: 'Courier New', monospace; /* Forces clean, straight geometric lines */
+    letter-spacing: 4px; /* Gives the three vertical bars breathing room to look like a tool/gauge */
+    padding-left: 4px;
+    font-style: normal; /* Keeps them perfectly vertical like precision blades */
+    display: inline-block;
+    text-shadow: 0 0 12px rgba(0, 255, 170, 0.6);
+}

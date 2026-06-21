@@ -769,3 +769,35 @@ footer {
         text-align: center;
     }
 }
+.brand-logo {
+    font-family: 'Inter', 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    letter-spacing: -1px; /* Slightly adjusted so the outlines don't overlap awkwardly */
+   
+    display: inline-block;
+    
+    /* 🎨 White fill with a sharp black outline */
+    color: #ffffff;
+    -webkit-text-stroke: 2px #000000; 
+    text-stroke: 2px #000000;
+}
+
+.brand-logo .indicator-bars {
+    font-family: 'Courier New', monospace; 
+    padding-left: 4px;
+    font-style: normal; 
+    display: inline-block;
+    
+    /* 🪓 Strip the inherited black border outline from these letters */
+    -webkit-text-stroke: 0px transparent;
+    text-stroke: 0px transparent;
+
+    /* 🌈 Premium Gradient Masking */
+    background: linear-gradient(135deg, pink 0%, #00bcff 100%, purple 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent; /* Makes the gradient visible through the text shape */
+    
+    /* Subtle neon glow matching the gradient engine */
+  
