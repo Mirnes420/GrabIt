@@ -839,3 +839,28 @@ body {
     display: inline-block;
     text-shadow: 0 0 12px rgba(0, 255, 170, 0.6);
 }
+
+.greeting-container {
+    margin-bottom: 24px;
+    padding-left: 12px;
+    border-left: 3px solid #2563eb; /* Cobalt Blue focus accent line */
+    text-align: left;
+}
+
+.greeting-label {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8; /* Dimmed slate gray for secondary hierarchy */
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.greeting-user {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: black; /* Crisp, ultra-bright white for the user's name */
+    letter-spacing: -0.02em;
+}

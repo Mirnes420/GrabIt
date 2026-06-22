@@ -11,68 +11,72 @@
 
 <body>
     <script>
+        // 1. Force Ngrok to skip its warning intercept page for the OAuth token flow
         if (window.location.hostname.includes('ngrok-free.dev')) {
             const params = new URLSearchParams(window.location.search);
             if (!params.has('ngrok-skip-browser-warning')) {
-                // Force inject the bypass header into the current browser session
                 document.cookie = "ngrok-skip-browser-warning=true; path=/; SameSite=None; Secure";
             }
         }
 
+        // 2. Parse token fractions appended from the Supabase login callback
         function parseSupabaseSessionFromHash() {
-            const hash = window.location.hash || '';
-            if (!hash.includes('access_token=')) {
-                return false;
-            }
+    const hash = window.location.hash || '';
+    if (!hash.includes('access_token=')) {
+        return false;
+    }
 
-            const params = new URLSearchParams(hash.replace('#', '?'));
-            const accessToken = params.get('access_token');
-            if (!accessToken) {
-                return false;
-            }
+    const params = new URLSearchParams(hash.replace('#', '?'));
+    const accessToken = params.get('access_token');
+    if (!accessToken) {
+        return false;
+    }
 
-            try {
-                const base64Url = accessToken.split('.')[1];
-                if (!base64Url) {
-                    return false;
-                }
+    try {
+        const base64Url = accessToken.split('.')[1];
+        if (!base64Url) return false;
 
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const tokenData = JSON.parse(window.atob(base64));
-                const userId = tokenData.sub || tokenData.user_id || tokenData.id;
-                const email = tokenData.email || tokenData.user_email;
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const tokenData = JSON.parse(window.atob(base64));
+        const userId = tokenData.sub || tokenData.user_id || tokenData.id;
+        const email = tokenData.email || tokenData.user_email;
 
-                if (!userId) {
-                    return false;
-                }
+        if (!userId) return false;
 
-                localStorage.setItem('access_token', accessToken);
-                localStorage.setItem('grabit_auth_token', accessToken);
-                localStorage.setItem('user_id', userId);
-                localStorage.setItem('grabit_tracked_user', userId);
+        // --- THE CRITICAL FIX ---
+        // Check if a different user is logging in than the one currently cached
+        const currentCachedUser = localStorage.getItem('user_id') || localStorage.getItem('grabit_tracked_user');
+        if (currentCachedUser && currentCachedUser !== userId) {
+            console.log("🔄 Different user detected. Evicting old profile cache...");
+            localStorage.removeItem('grabit_user_nickname'); // Drops the old name instantly
+        }
+        // ------------------------
 
-                if (email) {
-                    localStorage.setItem('user_email', email);
-                    localStorage.setItem('grabit_user_email', email);
-                }
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('grabit_auth_token', accessToken);
+        localStorage.setItem('user_id', userId);
+        localStorage.setItem('grabit_tracked_user', userId);
 
-                window.history.replaceState(null, '', window.location.pathname + window.location.search);
-                return true;
-            } catch (err) {
-                console.warn('Could not parse Supabase auth token from URL hash:', err);
-                return false;
-            }
+        if (email) {
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('grabit_user_email', email);
         }
 
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        return true;
+    } catch (err) {
+        console.warn('Could not parse Supabase auth token from URL hash:', err);
+        return false;
+    }
+}
+        // 3. Immediately validate session state or clear malicious payloads
         (function () {
             const parsedFromHash = parseSupabaseSessionFromHash();
             const token = localStorage.getItem('grabit_auth_token') || localStorage.getItem('access_token');
             const user = localStorage.getItem('grabit_tracked_user') || localStorage.getItem('user_id');
-            const email = localStorage.getItem('grabit_user_email') || localStorage.getItem('user_email');
 
             if (!token || !user || user === 'guest_user') {
                 if (!parsedFromHash) {
-                    // Instantly wipe poisoned or half-configured states and bounce back to login
                     localStorage.removeItem('grabit_auth_token');
                     localStorage.removeItem('access_token');
                     localStorage.removeItem('grabit_tracked_user');
@@ -84,30 +88,12 @@
             }
         })();
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const userId = localStorage.getItem('grabit_tracked_user') || localStorage.getItem('user_id');
-            const loginContainer = document.getElementById('login-container');
-            const appContainer = document.getElementById('app-container');
-
-            if (userId) {
-                console.log('✅ User session verified:', localStorage.getItem('grabit_user_email') || localStorage.getItem('user_email'));
-
-                if (loginContainer) loginContainer.style.display = 'none';
-                if (appContainer) appContainer.style.display = 'block';
-
-                const userDisplay = document.getElementById('user-email-display');
-                if (userDisplay) {
-                    userDisplay.innerText = localStorage.getItem('grabit_user_email') || localStorage.getItem('user_email') || 'User';
-                }
-            } else {
-                console.log('❌ No active session. Showing login screen.');
-                if (loginContainer) loginContainer.style.display = 'block';
-                if (appContainer) appContainer.style.display = 'none';
-            }
-        });
+        // Greeting onboarding is handled by app.js so the modal and welcome text
+        // are initialized once, after the app markup has fully loaded.
     </script>
 
-    <div class="app-container">
+    <!-- Main Active App Container (Hidden by default until session validation resolves) -->
+    <div id="app-container" class="app-container" style="display: none;">
         <canvas id="hidden-canvas" style="display: none;"></canvas>
 
         <video id="camera-feed" autoplay playsinline muted></video>
@@ -121,16 +107,7 @@
             <div class="auth-menu">
                 <div id="auth-profile-btn" class="auth-profile-btn">👤 <span id="display-user">Guest</span></div>
                 <div id="auth-dropdown" class="auth-dropdown" style="display: none;">
-                    <div id="auth-logged-out-view">
-                        <div style="margin-bottom: 8px;">
-                            <input type="email" id="login-email" placeholder="Enter Email"
-                                style="width: 100%; box-sizing: border-box; margin-bottom: 4px;" />
-                            <input type="password" id="login-password" placeholder="Enter Password"
-                                style="width: 100%; box-sizing: border-box;" />
-                        </div>
-                        <button id="login-submit-btn" class="auth-btn-action">Link Account</button>
-                    </div>
-                    <div id="auth-logged-in-view" style="display: none;">
+                    <div id="auth-logged-in-view">
                         <p id="profile-tracking-info">Tracking Active</p>
                         <button id="logout-btn" class="auth-btn-action auth-btn-danger">Disconnect ID</button>
                     </div>
@@ -139,10 +116,14 @@
         </div>
 
         <div id="start-screen" class="start-screen">
-        <div id="error-message" class="error-toast"></div>
+            
+            <div id="error-message" class="error-toast"></div>
 
-        
-
+            <!-- Dynamic Welcome Text Segment Hook -->
+            <div class="greeting-container">
+    <span id="dynamic-greeting" class="greeting-user greeting-label">Welcome,</span>
+   
+</div>
             <div class="pre-call-card">
                 <div class="pre-call-logo"><img src="./public/logo.png" alt="DIY Fix"></div>
                 <div id="token-error-banner" class="token-error-alert" style="display: none;"></div>
@@ -163,63 +144,62 @@
                 <button id="start-btn" class="pre-call-start">📞 Start Call</button>
             </div>
             <div class="app-footer">
-               <div class="liability-risk-banner">
-                <div class="banner-text">
-                    <strong>Critical Guardrails:</strong> Do not use this engine on live structural utility frameworks, main pressurized gas pipelines, or high voltage sub stations. Complex dangerous installations require a <strong>licensed engineer</strong>.
-                </div>
-            </div>
-            </div>
-        </div>
-        
-
-        </div>
-
-        <div id="disclaimer-overlay" class="disclaimer-overlay" style="display: none;">
-            <div class="disclaimer-card">
-                <h3>⚠️ Safety and Liability Warning</h3>
-                <div class="disclaimer-body">
-                    <p>GrabIt provides experimental real-time AI guidance for educational and troubleshooting use cases.
-                    </p>
-                    <p><strong>If your task involves structural utility frameworks (high-voltage electrical lines,
-                            pressurized gas lines, primary sewage lines, or complex automotive machinery), you must
-                            notify and hire a licensed professional engineer.</strong></p>
-                    <p>By proceeding, you explicitly assume all risk and acknowledge that conversations are logged for
-                        regulatory and safety compliance audits.</p>
-                </div>
-                <div class="disclaimer-ack">
-                    <label>
-                        <input type="checkbox" id="disclaimer-checkbox"> I understand, accept the liability limits, and
-                        wish to proceed.
-                    </label>
-                </div>
-                <div class="disclaimer-actions">
-                    <button id="disclaimer-cancel" class="btn-disclaimer-cancel">Cancel</button>
-                    <button id="disclaimer-accept" class="btn-disclaimer-accept" disabled>Accept & Initialize
-                        Call</button>
+                <div class="liability-risk-banner">
+                    <div class="banner-text">
+                        <strong>Critical Guardrails:</strong> Do not use this engine on live structural utility frameworks, main pressurized gas pipelines, or high voltage sub stations. Complex dangerous installations require a <strong>licensed engineer</strong>.
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div id="call-bar" class="call-bar" style="display: none;">
-            <button id="flip-btn" class="call-btn" title="Flip Camera">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28">
-                    <path
-                        d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
-                    <path d="M12 10.5l-3 3h2.25v3h1.5v-3H15z" opacity=".6" />
-                </svg>
-            </button>
-
-            <button id="stop-btn" class="call-btn call-btn-hangup" title="End Call">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
-                    <path
-                        d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.21 2.2z"
-                        transform="rotate(135 12 12)" />
-                </svg>
-            </button>
-        </div>
-
-        <div id="error-message" class="error-toast"></div>
     </div>
+
+    <!-- First Time Profiles Identity Setup Modal Component -->
+    <div id="name-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+            <h3 style="color: #f8fafc; margin-top: 0; margin-bottom: 8px; font-size: 18px;">What should I call you?</h3>
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px;">Please customize your display identity profile name.</p>
+            <input type="text" id="modal-name-input" placeholder="Your Name" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; font-size: 16px; box-sizing: border-box; margin-bottom: 16px; outline: none;"/>
+            <button id="modal-name-submit" style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">Save and Proceed</button>
+        </div>
+    </div>
+
+    <!-- Safety Declarations Modal Overlay Screen Component -->
+    <div id="disclaimer-overlay" class="disclaimer-overlay" style="display: none;">
+        <div class="disclaimer-card">
+            <h3>⚠️ Safety and Liability Warning</h3>
+            <div class="disclaimer-body">
+                <p>GrabIt provides experimental real-time AI guidance for educational and troubleshooting use cases.</p>
+                <p><strong>If your task involves structural utility frameworks (high-voltage electrical lines, pressurized gas lines, primary sewage lines, or complex automotive machinery), you must notify and hire a licensed professional engineer.</strong></p>
+                <p>By proceeding, you explicitly assume all risk and acknowledge that conversations are logged for regulatory and safety compliance audits.</p>
+            </div>
+            <div class="disclaimer-ack">
+                <label>
+                    <input type="checkbox" id="disclaimer-checkbox"> I understand, accept the liability limits, and wish to proceed.
+                </label>
+            </div>
+            <div class="disclaimer-actions">
+                <button id="disclaimer-cancel" class="btn-disclaimer-cancel">Cancel</button>
+                <button id="disclaimer-accept" class="btn-disclaimer-accept" disabled>Accept & Initialize Call</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Ongoing Stream Management Overlay Bar Component -->
+    <div id="call-bar" class="call-bar" style="display: none;">
+        <button id="flip-btn" class="call-btn" title="Flip Camera">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28">
+                <path d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                <path d="M12 10.5l-3 3h2.25v3h1.5v-3H15z" opacity=".6" />
+            </svg>
+        </button>
+
+        <button id="stop-btn" class="call-btn call-btn-hangup" title="End Call">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
+                <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.21 2.2z" transform="rotate(135 12 12)" />
+            </svg>
+        </button>
+    </div>
+
     <script src="app.js"></script>
 </body>
 

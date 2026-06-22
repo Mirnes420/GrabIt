@@ -74,22 +74,12 @@ authProfileBtn.addEventListener('click', () => {
     authDropdown.style.display = authDropdown.style.display === 'none' ? 'block' : 'none';
 });
 
-loginSubmitBtn.addEventListener('click', () => {
-    const rawVal = loginUsernameInput.value.trim();
-    if (rawVal) {
-        USER_ID = rawVal;
-        localStorage.setItem("grabit_tracked_user", USER_ID);
-        loginUsernameInput.value = "";
-        authDropdown.style.display = 'none';
-        syncAuthUI();
-    }
-});
-
 logoutBtn.addEventListener('click', () => {
     USER_ID = "guest_user";
     localStorage.removeItem("grabit_tracked_user");
     authDropdown.style.display = 'none';
     syncAuthUI();
+    window.location.reload()
 });
 
 // ── SAFETY INTERCEPT ENGINE ───────────────
@@ -111,6 +101,115 @@ disclaimerCancel.addEventListener('click', () => {
 disclaimerAccept.addEventListener('click', () => {
     disclaimerOverlay.style.display = 'none';
     startSession(); // Trigger safe pipeline init upon active acceptance signature
+});
+
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const userId = localStorage.getItem('grabit_tracked_user') || localStorage.getItem('user_id');
+    const appContainer = document.getElementById('app-container');
+    const greetingHeader = document.getElementById('dynamic-greeting');
+    const nameModal = document.getElementById('name-modal');
+    const nameInput = document.getElementById('modal-name-input');
+    const nameSubmit = document.getElementById('modal-name-submit');
+    const displayUserSpan = document.getElementById('display-user');
+
+    if (!userId || userId === 'guest_user') {
+        return;
+    }
+
+    if (appContainer) {
+        appContainer.style.display = 'block';
+    }
+
+    async function persistNickname(nickname) {
+        try {
+            const response = await fetch(`${httpApiBase}/api/users/update-profile`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, nickname })
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.warn('Profile sync failed:', text);
+            }
+        } catch (err) {
+            console.warn('Profile sync failed:', err);
+        }
+    }
+
+    async function fetchStoredNickname() {
+        try {
+            const response = await fetch(`${httpApiBase}/api/users/profile/${encodeURIComponent(userId)}`);
+            if (!response.ok) {
+                return null;
+            }
+            const data = await response.json();
+            return data.nickname || null;
+        } catch (err) {
+            console.warn('Could not fetch profile nickname:', err);
+            return null;
+        }
+    }
+
+    function updateGreeting(name, isReturningUser) {
+        if (greetingHeader) {
+            greetingHeader.innerText = isReturningUser
+                ? `${name} is back!`
+                : `Welcome, ${name}, what are we building today!`;
+        }
+        if (displayUserSpan) {
+            displayUserSpan.innerText = name;
+        }
+    }
+
+    const dbName = await fetchStoredNickname();
+    if (dbName) {
+        localStorage.setItem('grabit_user_nickname', dbName);
+        updateGreeting(dbName, true);
+        return;
+    }
+
+    const cachedName = localStorage.getItem('grabit_user_nickname')?.trim();
+    if (cachedName) {
+        updateGreeting(cachedName, true);
+        return;
+    }
+
+    if (nameModal) {
+        nameModal.style.display = 'flex';
+        window.setTimeout(() => {
+            nameInput?.focus();
+            nameInput?.select();
+        }, 50);
+    }
+
+    if (nameInput && !nameInput.dataset.bound) {
+        nameInput.dataset.bound = 'true';
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                nameSubmit?.click();
+            }
+        });
+    }
+
+    if (nameSubmit && !nameSubmit.dataset.bound) {
+        nameSubmit.dataset.bound = 'true';
+        nameSubmit.addEventListener('click', async () => {
+            const enteredName = nameInput?.value.trim() || '';
+            if (!enteredName) {
+                alert('Please specify an identity name.');
+                return;
+            }
+
+            localStorage.setItem('grabit_user_nickname', enteredName);
+            if (nameModal) {
+                nameModal.style.display = 'none';
+            }
+            updateGreeting(enteredName, false);
+            await persistNickname(enteredName);
+        });
+    }
 });
 
 // ── CORE AUDIO SYSTEMS ─────────────────────
