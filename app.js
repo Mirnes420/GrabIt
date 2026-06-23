@@ -59,14 +59,20 @@ let audioInputSource = null;
 
 // ── AUTH MANAGER ACTIONS ───────────────────
 function syncAuthUI() {
-    displayUser.innerText = USER_ID === "guest_user" ? "Guest" : USER_EMAIL;
-    if (USER_ID === "guest_user") {
-        loggedOutView.style.display = "block";
-        loggedInView.style.display = "none";
-    } else {
-        loggedOutView.style.display = "none";
-        loggedInView.style.display = "block";
+    if (displayUser) {
+        displayUser.innerText = USER_ID === "guest_user" ? "Guest" : USER_EMAIL;
     }
+
+    // Protect against missing DOM nodes (some pages or builds omit the
+    // logged-in/out containers). Avoid throwing - simply skip styling.
+    if (USER_ID === "guest_user") {
+        if (loggedOutView) loggedOutView.style.display = "block";
+        if (loggedInView) loggedInView.style.display = "none";
+    } else {
+        if (loggedOutView) loggedOutView.style.display = "none";
+        if (loggedInView) loggedInView.style.display = "block";
+    }
+
     fetchBalance();
 }
 
