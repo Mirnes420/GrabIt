@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GrabIt App</title>
+    <title>CallIT App</title>
     <link rel="icon" type="image/png" href="./public/logo.png">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -131,7 +131,7 @@
 
         <div id="error-message" class="error-toast"></div>
         
-        <div class="start-container" style="display: flex; flex-direction: column; gap: 24px; max-width: 900px; width: 100%; margin: 0 auto; padding: 20px; box-sizing: border-box; align-items: center;">
+        <div class="start-container">
             
             <!-- Shared Greeting Header above both cards -->
             <div class="shared-greeting-header">
@@ -145,9 +145,9 @@
                 <div id="token-warning" class="token-warning-alert" style="display: none; margin-top: 8px; font-size: 12px; color: #b45309;"></div>
             </div>
 
-            <div style="display: flex; gap: 24px; width: 100%; flex-wrap: wrap; justify-content: center;">
+            <div class="cards-row">
             
-                <div id="jarvis-screen" class="jarvis-screen pre-call-card" style="flex: 1; min-width: 280px; margin: 0;">
+                <div id="jarvis-screen" class="jarvis-screen pre-call-card">
                     <span class="mode-badge mode-badge-jarvis">Jarvis Mode</span>
                     <div class="pre-call-logo"><img src="./public/jarvis.png" alt="Jarvis AI"></div>
                     
@@ -167,7 +167,7 @@
                     <button id="start-btn-jarvis" class="pre-call-start" style="background: #0f172a; border: 1px solid #334155;">🖥️ Launch Jarvis</button>
                 </div>
 
-                <div id="start-screen" class="start-screen pre-call-card" style="flex: 1; min-width: 280px; margin: 0;">
+                <div id="start-screen" class="start-screen pre-call-card">
                     <span class="mode-badge mode-badge-diy">DIY Mode</span>
                     <div class="pre-call-logo"><img src="./public/diy.png" alt="DIY Fix"></div>
                     <div id="token-error-banner" class="token-error-alert" style="display: none;"></div>
@@ -215,7 +215,7 @@
         <div class="disclaimer-card">
             <h3>⚠️ Safety and Liability Warning</h3>
             <div class="disclaimer-body">
-                <p>GrabIt provides experimental real-time AI guidance for educational and troubleshooting use cases.</p>
+                <p>CallIt provides experimental real-time AI guidance for educational and troubleshooting use cases.</p>
                 <p><strong>If your task involves structural utility frameworks (high-voltage electrical lines, pressurized gas lines, primary sewage lines, or complex automotive machinery), you must notify and hire a licensed professional engineer.</strong></p>
                 <p>By proceeding, you explicitly assume all risk and acknowledge that conversations are logged for regulatory and safety compliance audits.</p>
             </div>
