@@ -40,7 +40,7 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: 0;
-    background: var(--black);
+    background: var(--white);
 }
 
 /* ── Top bar ────────────────────────────────────────────── */
@@ -115,23 +115,32 @@ body {
 }
 
 /* ── Pre-session start screen ───────────────────────────── */
-.start-screen {
-    position: fixed;
+.start-container {
     display: flex;
-    flex-direction: column;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
+    flex-direction: row;
+    gap: 2rem;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.95);
+    align-items: center;
+    min-height: 100vh;
+    width: 100% !important;
+    background: var(--white);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    box-sizing: border-box;
+    padding: 2rem;
+}
+
+/* Remove fixed/inset layout from these so they sit side-by-side */
+.start-screen, .jarvis-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .pre-call-card {
     background: var(--white);
-    border: 1.5px solid var(--gray-200);
+    border: 1px solid var(--gray-200);
     border-radius: 24px;
     padding: 2.5rem 2rem;
     width: min(360px, 90vw);
@@ -470,6 +479,7 @@ body {
 
 .auth-btn-danger {
     background: #dc2626;
+    margin-top: 0.1em;
 }
 
 #profile-tracking-info {
@@ -725,7 +735,7 @@ body {
 /* ── additional app styles ────────────────────────── */ 
 .pre-call-logo img {
     width: auto;
-    height: 3em;
+    height: 4em;
     object-fit: contain;
 }
 
@@ -863,4 +873,174 @@ body {
     font-weight: 700;
     color: black; /* Crisp, ultra-bright white for the user's name */
     letter-spacing: -0.02em;
+}
+
+/* ── Shared Greeting Header ────────────────────────────── */
+.shared-greeting-header {
+    text-align: center;
+    padding: 0.5rem 0 0.25rem;
+}
+
+.shared-greeting-text {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--black);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.shared-greeting-sub {
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+/* ── Mode Badge Labels ─────────────────────────────────── */
+.mode-badge {
+    display: inline-block;
+    padding: 0.3rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+.mode-badge-jarvis {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1.5px solid rgba(59, 130, 246, 0.35);
+    color: #2563eb;
+}
+
+.mode-badge-diy {
+    background: rgba(10, 10, 10, 0.05);
+    border: 1.5px solid rgba(10, 10, 10, 0.2);
+    color: var(--black);
+}
+
+/* ── Loading Overlay ───────────────────────────────────── */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--gray-200);
+    border-top: 4px solid var(--black);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--black);
+    letter-spacing: -0.02em;
+}
+
+/* ── Jarvis Session Container ──────────────────────────── */
+.jarvis-session-container {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    background: var(--white);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--black);
+}
+
+.jarvis-orb-wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.jarvis-orb {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 70%, #1e3a8a 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6),
+                inset 0 0 20px rgba(255, 255, 255, 0.4);
+    animation: orb-pulse 2s infinite ease-in-out;
+}
+
+.jarvis-orb-ring {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border: 2px solid rgba(59, 130, 246, 0.4);
+    border-radius: 50%;
+    animation: ring-rotate 4s linear infinite;
+}
+
+.jarvis-orb-ring-outer {
+    position: absolute;
+    width: 190px;
+    height: 190px;
+    border: 1px dashed rgba(59, 130, 246, 0.2);
+    border-radius: 50%;
+    animation: ring-rotate-reverse 8s linear infinite;
+}
+
+@keyframes orb-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 60px rgba(59, 130, 246, 0.9), inset 0 0 30px rgba(255, 255, 255, 0.6);
+    }
+}
+
+@keyframes ring-rotate {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes ring-rotate-reverse {
+    to { transform: rotate(-360deg); }
+}
+
+.jarvis-title {
+    margin-top: 2rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--black);
+}
+
+.jarvis-subtitle {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--gray-600);
 }

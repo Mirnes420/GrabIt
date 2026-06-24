@@ -10,7 +10,8 @@ const wsUrl = `wss://${BACKEND_NGROK_DOMAIN}/api/live-fix/${USER_ID}`;
 const videoEl = document.getElementById('camera-feed');
 const canvasEl = document.getElementById('hidden-canvas');
 const ctx = canvasEl.getContext('2d');
-const startBtn = document.getElementById('start-btn');
+const startBtnDiy = document.getElementById('start-btn-diy');
+const startBtnJarvis = document.getElementById('start-btn-jarvis');
 const stopBtn = document.getElementById('stop-btn');
 const flipBtn = document.getElementById('flip-btn');
 const startScreen = document.getElementById('start-screen');
@@ -32,6 +33,7 @@ const displayUser = document.getElementById('display-user');
 const loginUsernameInput = document.getElementById('login-username');
 const loginSubmitBtn = document.getElementById('login-submit-btn');
 const logoutBtn = document.getElementById('logout-btn');
+const profileBtn = document.getElementById('profile-btn');
 const loggedOutView = document.getElementById('auth-logged-out-view');
 const loggedInView = document.getElementById('auth-logged-in-view');
 
@@ -63,8 +65,6 @@ function syncAuthUI() {
         displayUser.innerText = USER_ID === "guest_user" ? "Guest" : USER_EMAIL;
     }
 
-    // Protect against missing DOM nodes (some pages or builds omit the
-    // logged-in/out containers). Avoid throwing - simply skip styling.
     if (USER_ID === "guest_user") {
         if (loggedOutView) loggedOutView.style.display = "block";
         if (loggedInView) loggedInView.style.display = "none";
@@ -80,21 +80,43 @@ authProfileBtn.addEventListener('click', () => {
     authDropdown.style.display = authDropdown.style.display === 'none' ? 'block' : 'none';
 });
 
-logoutBtn.addEventListener('click', () => {
+profileBtn?.addEventListener('click', () => {
+    authDropdown.style.display = 'none';
+    window.location.href = 'profile.html';
+});
+
+logoutBtn?.addEventListener('click', () => {
     USER_ID = "guest_user";
     localStorage.removeItem("grabit_tracked_user");
+    localStorage.removeItem("grabit_auth_token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("grabit_user_email");
     authDropdown.style.display = 'none';
     syncAuthUI();
-    window.location.reload()
+    window.location.reload();
 });
 
 // ── SAFETY INTERCEPT ENGINE ───────────────
-startBtn.addEventListener('click', () => {
-    // Intercept action loop to display legal terms and force physical checkbox interaction
-    disclaimerCheckbox.checked = false;
-    disclaimerAccept.disabled = true;
-    disclaimerOverlay.style.display = 'flex';
-});
+let pendingSessionMode = null;
+
+if (startBtnDiy) {
+    startBtnDiy.addEventListener('click', () => {
+        pendingSessionMode = 'diy';
+        disclaimerCheckbox.checked = false;
+        disclaimerAccept.disabled = true;
+        disclaimerOverlay.style.display = 'flex';
+    });
+}
+
+if (startBtnJarvis) {
+    startBtnJarvis.addEventListener('click', () => {
+        pendingSessionMode = 'jarvis';
+        disclaimerCheckbox.checked = false;
+        disclaimerAccept.disabled = true;
+        disclaimerOverlay.style.display = 'flex';
+    });
+}
 
 disclaimerCheckbox.addEventListener('change', (e) => {
     disclaimerAccept.disabled = !e.target.checked;
@@ -106,7 +128,7 @@ disclaimerCancel.addEventListener('click', () => {
 
 disclaimerAccept.addEventListener('click', () => {
     disclaimerOverlay.style.display = 'none';
-    startSession(); // Trigger safe pipeline init upon active acceptance signature
+    startSession(pendingSessionMode); // Trigger safe pipeline init upon active acceptance signature
 });
 
 
@@ -159,10 +181,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateGreeting(name, isReturningUser) {
-        if (greetingHeader) {
-            greetingHeader.innerText = isReturningUser
+        const sharedGreeting = document.getElementById('shared-greeting');
+        if (sharedGreeting) {
+            sharedGreeting.innerText = isReturningUser
                 ? `${name} is back!`
-                : `Welcome, ${name}, what are we building today!`;
+                : `Welcome, ${name}!`;
         }
         if (displayUserSpan) {
             displayUserSpan.innerText = name;
@@ -286,7 +309,7 @@ async function fetchBalance() {
 
 function checkPaymentStatus() {
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     if (urlParams.get('payment') === 'success') {
         alert("🎉 Payment successful! Your tokens have been credited.");
         if (typeof fetchBalance === "function") {
@@ -300,34 +323,101 @@ function checkPaymentStatus() {
 checkPaymentStatus();
 
 // ── WEBSOCKET PIPELINE WITH TRANSCRIPT TRACKING ──
-async function startSession() {
+let currentSessionType = null;
+
+async function startSession(mode) {
+    currentSessionType = mode;
     errorMsg.style.display = 'none';
     isSessionStopping = false;
     if (tokenErrorBanner) tokenErrorBanner.style.display = 'none'; // Clear any residual error visual layouts
     currentSessionTranscript = []; // Reset transcript data log for new telemetry entry
-    await initAudioSystems();
+
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('active');
+        loadingText.innerText = mode === 'jarvis' ? 'Requesting screen share access...' : 'Initializing camera & microphone...';
+    }
 
     try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480, facingMode: currentFacingMode },
-            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-        });
-        videoEl.srcObject = mediaStream;
-        canvasEl.width = 640;
-        canvasEl.height = 480;
-        const selectedSkill = skillSelectEl ? skillSelectEl.value : 'general';
+        await initAudioSystems();
 
-        // Modify your WebSocket instantiation line to carry the chosen track:
-        ws = new WebSocket(`${wsUrl}?user_id=${encodeURIComponent(USER_ID)}&skill=${encodeURIComponent(selectedSkill)}`);
+        if (mode === 'jarvis') {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            let audioStream = null;
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+                });
+            } catch (e) {
+                console.warn("Could not acquire microphone audio stream:", e);
+            }
+            const tracks = [...screenStream.getVideoTracks()];
+            if (audioStream) {
+                tracks.push(...audioStream.getAudioTracks());
+            }
+            mediaStream = new MediaStream(tracks);
 
+            // Listen for screen share stop (user clicks "Stop sharing" built-in browser button)
+            screenStream.getVideoTracks()[0].addEventListener('ended', () => {
+                stopSession();
+            });
+
+            videoEl.srcObject = mediaStream;
+            // CRITICAL: Keep the video element rendering (just hide it visually).
+            // display:none stops the browser from painting video frames, causing a black canvas.
+            videoEl.style.position = 'fixed';
+            videoEl.style.top = '-9999px';
+            videoEl.style.left = '-9999px';
+            videoEl.style.width = '1px';
+            videoEl.style.height = '1px';
+            videoEl.style.opacity = '0';
+            videoEl.style.pointerEvents = 'none';
+            await videoEl.play().catch(() => { }); // Ensure playback starts
+            canvasEl.width = 1280;
+            canvasEl.height = 720;
+
+            const wsJarvisUrl = `wss://${BACKEND_NGROK_DOMAIN}/api/jarvis/${USER_ID}`;
+            ws = new WebSocket(wsJarvisUrl);
+        } else {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: currentFacingMode },
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+            videoEl.srcObject = mediaStream;
+            videoEl.style.position = '';
+            videoEl.style.top = '';
+            videoEl.style.left = '';
+            videoEl.style.width = '';
+            videoEl.style.height = '';
+            videoEl.style.opacity = '';
+            videoEl.style.pointerEvents = '';
+            videoEl.style.display = 'block';
+            canvasEl.width = 640;
+            canvasEl.height = 480;
+            const selectedSkill = skillSelectEl ? skillSelectEl.value : 'general';
+            ws = new WebSocket(`${wsUrl}?user_id=${encodeURIComponent(USER_ID)}&skill=${encodeURIComponent(selectedSkill)}`);
+        }
 
         ws.onopen = () => {
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('active');
+            }
             statusIndicator.className = 'status-indicator connected';
             statusText.innerText = 'Connected';
+
+            const startContainer = document.querySelector('.start-container');
+            if (startContainer) startContainer.style.display = 'none';
             startScreen.style.display = 'none';
             callBar.style.display = 'flex';
 
-            sendInterval = setInterval(captureAndSendFrame, 500);
+            if (mode === 'jarvis') {
+                const jarvisSessionContainer = document.getElementById('jarvis-session-container');
+                if (jarvisSessionContainer) jarvisSessionContainer.style.display = 'flex';
+                sendInterval = setInterval(captureAndSendFrame, 3000); // 3 seconds for screen
+            } else {
+                sendInterval = setInterval(captureAndSendFrame, 500);
+            }
             startAudioCapture();
         };
 
@@ -337,7 +427,7 @@ async function startSession() {
                 errorMsg.innerText = msg.error;
                 errorMsg.style.display = 'block';
                 setTimeout(() => { errorMsg.style.display = 'none'; }, 5000);
-                
+
                 if (msg.error.includes("Refill") || msg.error.includes("tokens") || msg.error.includes("Insufficient")) {
                     void stopSession(4002);
                 } else {
@@ -368,7 +458,7 @@ async function startSession() {
             if (Math.random() < 0.2) fetchBalance();
         };
 
-        ws.onclose = (event) => { 
+        ws.onclose = (event) => {
             console.log("[WS CLOSE EVENT DETECTED] Code:", event.code);
             if (!isSessionStopping) {
                 void stopSession(event.code);
@@ -377,7 +467,10 @@ async function startSession() {
 
     } catch (err) {
         console.error("Error starting session", err);
-        errorMsg.innerText = "Camera/Mic access denied or WebSocket connection failed.";
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('active');
+        }
+        errorMsg.innerText = "Access denied or WebSocket connection failed.";
         errorMsg.style.display = 'block';
     }
 }
@@ -393,7 +486,7 @@ function startAudioCapture() {
         if (!ws || ws.readyState !== WebSocket.OPEN) {
             return;
         }
-        
+
         const inputData = e.inputBuffer.getChannelData(0);
         const resampleRatio = srcSampleRate / targetSampleRate;
         const targetLength = Math.round(inputData.length / resampleRatio);
@@ -488,6 +581,15 @@ async function stopSession(closeCode) {
     }
     if (videoEl) {
         videoEl.srcObject = null;
+        // Clear all inline styles set during Jarvis mode
+        videoEl.style.position = '';
+        videoEl.style.top = '';
+        videoEl.style.left = '';
+        videoEl.style.width = '';
+        videoEl.style.height = '';
+        videoEl.style.opacity = '';
+        videoEl.style.pointerEvents = '';
+        videoEl.style.display = 'none';
     }
 
     // 4. Force disconnect and drop the WebSocket pipeline wrapper
@@ -499,9 +601,24 @@ async function stopSession(closeCode) {
         ws = null;
     }
 
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('active');
+    }
+
+    const jarvisSessionContainer = document.getElementById('jarvis-session-container');
+    if (jarvisSessionContainer) {
+        jarvisSessionContainer.style.display = 'none';
+    }
+
     // 5. Instantly bounce UI Panels back to safety viewports
     statusIndicator.className = 'status-indicator error';
     statusText.innerText = 'Disconnected';
+
+    const startContainer = document.querySelector('.start-container');
+    if (startContainer) {
+        startContainer.style.display = 'flex';
+    }
     startScreen.style.display = 'flex';
     callBar.style.display = 'none';
 
@@ -522,7 +639,7 @@ async function stopSession(closeCode) {
     if (currentSessionTranscript.length > 0) {
         const transcriptCopy = [...currentSessionTranscript];
         currentSessionTranscript = []; // Wipe immediately to avoid duplication states
-        
+
         try {
             await shipTranscriptToBackend(transcriptCopy);
         } catch (err) {

@@ -21,54 +21,54 @@
 
         // 2. Parse token fractions appended from the Supabase login callback
         function parseSupabaseSessionFromHash() {
-    const hash = window.location.hash || '';
-    if (!hash.includes('access_token=')) {
-        return false;
-    }
+            const hash = window.location.hash || '';
+            if (!hash.includes('access_token=')) {
+                return false;
+            }
 
-    const params = new URLSearchParams(hash.replace('#', '?'));
-    const accessToken = params.get('access_token');
-    if (!accessToken) {
-        return false;
-    }
+            const params = new URLSearchParams(hash.replace('#', '?'));
+            const accessToken = params.get('access_token');
+            if (!accessToken) {
+                return false;
+            }
 
-    try {
-        const base64Url = accessToken.split('.')[1];
-        if (!base64Url) return false;
+            try {
+                const base64Url = accessToken.split('.')[1];
+                if (!base64Url) return false;
 
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const tokenData = JSON.parse(window.atob(base64));
-        const userId = tokenData.sub || tokenData.user_id || tokenData.id;
-        const email = tokenData.email || tokenData.user_email;
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const tokenData = JSON.parse(window.atob(base64));
+                const userId = tokenData.sub || tokenData.user_id || tokenData.id;
+                const email = tokenData.email || tokenData.user_email;
 
-        if (!userId) return false;
+                if (!userId) return false;
 
-        // --- THE CRITICAL FIX ---
-        // Check if a different user is logging in than the one currently cached
-        const currentCachedUser = localStorage.getItem('user_id') || localStorage.getItem('grabit_tracked_user');
-        if (currentCachedUser && currentCachedUser !== userId) {
-            console.log("🔄 Different user detected. Evicting old profile cache...");
-            localStorage.removeItem('grabit_user_nickname'); // Drops the old name instantly
+                // --- THE CRITICAL FIX ---
+                const currentCachedUser = localStorage.getItem('user_id') || localStorage.getItem('grabit_tracked_user');
+                if (currentCachedUser && currentCachedUser !== userId) {
+                    console.log("🔄 Different user detected. Evicting old profile cache...");
+                    localStorage.removeItem('grabit_user_nickname');
+                }
+                // ------------------------
+
+                localStorage.setItem('access_token', accessToken);
+                localStorage.setItem('grabit_auth_token', accessToken);
+                localStorage.setItem('user_id', userId);
+                localStorage.setItem('grabit_tracked_user', userId);
+
+                if (email) {
+                    localStorage.setItem('user_email', email);
+                    localStorage.setItem('grabit_user_email', email);
+                }
+
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                return true;
+            } catch (err) {
+                console.warn('Could not parse Supabase auth token from URL hash:', err);
+                return false;
+            }
         }
-        // ------------------------
 
-        localStorage.setItem('access_token', accessToken);
-        localStorage.setItem('grabit_auth_token', accessToken);
-        localStorage.setItem('user_id', userId);
-        localStorage.setItem('grabit_tracked_user', userId);
-
-        if (email) {
-            localStorage.setItem('user_email', email);
-            localStorage.setItem('grabit_user_email', email);
-        }
-
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        return true;
-    } catch (err) {
-        console.warn('Could not parse Supabase auth token from URL hash:', err);
-        return false;
-    }
-}
         // 3. Immediately validate session state or clear malicious payloads
         (function () {
             const parsedFromHash = parseSupabaseSessionFromHash();
@@ -87,16 +87,29 @@
                 }
             }
         })();
-
-        // Greeting onboarding is handled by app.js so the modal and welcome text
-        // are initialized once, after the app markup has fully loaded.
     </script>
 
-    <!-- Main Active App Container (Hidden by default until session validation resolves) -->
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">Initializing connection...</div>
+    </div>
+
     <div id="app-container" class="app-container" style="display: none;">
         <canvas id="hidden-canvas" style="display: none;"></canvas>
 
         <video id="camera-feed" autoplay playsinline muted></video>
+
+        <!-- Jarvis Active Session View -->
+        <div id="jarvis-session-container" class="jarvis-session-container">
+            <div class="jarvis-orb-wrapper">
+                <div class="jarvis-orb-ring-outer"></div>
+                <div class="jarvis-orb-ring"></div>
+                <div class="jarvis-orb"></div>
+            </div>
+            <h3 class="jarvis-title">Jarvis Workspace Active</h3>
+            <p class="jarvis-subtitle">Watching screen workflow & listening for queries...</p>
+        </div>
 
         <div class="top-bar">
             <div class="status-badge">
@@ -105,55 +118,90 @@
             </div>
 
             <div class="auth-menu">
-                <div id="auth-profile-btn" class="auth-profile-btn">👤 <span id="display-user">Guest</span></div>
+                <div id="auth-profile-btn" class="auth-profile-btn"><span id="display-user">Guest</span></div>
                 <div id="auth-dropdown" class="auth-dropdown" style="display: none;">
                     <div id="auth-logged-in-view">
                         <p id="profile-tracking-info">Tracking Active</p>
-                        <button id="logout-btn" class="auth-btn-action auth-btn-danger">Disconnect ID</button>
+                        <button id="profile-btn" class="auth-btn-action auth-btn-dark">Profile</button>
+                        <button id="logout-btn" class="auth-btn-action auth-btn-danger">Logout</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="start-screen" class="start-screen">
+        <div id="error-message" class="error-toast"></div>
+        
+        <div class="start-container" style="display: flex; flex-direction: column; gap: 24px; max-width: 900px; width: 100%; margin: 0 auto; padding: 20px; box-sizing: border-box; align-items: center;">
             
-            <div id="error-message" class="error-toast"></div>
-
-            <!-- Dynamic Welcome Text Segment Hook -->
-            <div class="greeting-container">
-    <span id="dynamic-greeting" class="greeting-user greeting-label">Welcome,</span>
-   
-</div>
-            <div class="pre-call-card">
-                <div class="pre-call-logo"><img src="./public/logo.png" alt="DIY Fix"></div>
-                <div id="token-error-banner" class="token-error-alert" style="display: none;"></div>
-                <div class="skill-selection-wrapper" style="margin-bottom: 16px; width: 100%; text-align: left;">
-                    <label for="skill-select" style="font-size: 12px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize AI Knowledge Base:</label>
-                    <select id="skill-select" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
-                        <option value="general">General Troubleshooting (Default)</option>
-                        <option value="plumbing">Plumbing & Water Flow Systems</option>
-                        <option value="pc_hardware">PC Systems & Diagnostics Hardware</option>
-                        <option value="automotive">Basic Mechanical & Small Engine Repair</option>
-                        <option value="networking">Home Networks & Component Wiring</option>
-                    </select>
+            <!-- Shared Greeting Header above both cards -->
+            <div class="shared-greeting-header">
+                <span id="shared-greeting" class="shared-greeting-text">Welcome</span>
+                <p class="shared-greeting-sub" style="margin-bottom: 12px;">What would you like help with today?</p>
+                <div class="header-tokens-wrapper" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; background: rgba(15, 23, 42, 0.05); padding: 6px 16px; border-radius: 50px; border: 1px solid var(--gray-200);">
+                    <span style="font-weight: 600; color: var(--gray-600);">Tokens:</span>
+                    <span id="token-display" style="font-weight: 800; color: var(--black);">---</span>
+                    <a href="refill.html" class="pre-call-refill" style="margin-left: 8px; font-weight: 700; color: #2563eb; text-decoration: none;">+ Buy Tokens</a>
                 </div>
-                <p class="pre-call-label">Your token balance</p>
-                <div class="pre-call-tokens" id="token-display">---</div>
-                <div id="token-warning" class="token-warning-alert" style="display: none;"></div>
-                <a href="refill.html" class="pre-call-refill">+ Buy Tokens</a>
-                <button id="start-btn" class="pre-call-start">📞 Start Call</button>
+                <div id="token-warning" class="token-warning-alert" style="display: none; margin-top: 8px; font-size: 12px; color: #b45309;"></div>
             </div>
-            <div class="app-footer">
-                <div class="liability-risk-banner">
-                    <div class="banner-text">
-                        <strong>Critical Guardrails:</strong> Do not use this engine on live structural utility frameworks, main pressurized gas pipelines, or high voltage sub stations. Complex dangerous installations require a <strong>licensed engineer</strong>.
+
+            <div style="display: flex; gap: 24px; width: 100%; flex-wrap: wrap; justify-content: center;">
+            
+                <div id="jarvis-screen" class="jarvis-screen pre-call-card" style="flex: 1; min-width: 280px; margin: 0;">
+                    <span class="mode-badge mode-badge-jarvis">Jarvis Mode</span>
+                    <div class="pre-call-logo"><img src="./public/jarvis.png" alt="Jarvis AI"></div>
+                    
+                    <h2 style="margin-top: 12px; font-size: 20px; font-weight: 800;">Jarvis Workspace Mode</h2>
+                    <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">AI companion watches your screen workflow in real-time, reviewing code syntax, identifying logic gaps, and detailing terminal error tracking via audio.</p>
+                    
+                    <div class="skill-selection-wrapper" style="margin-bottom: 16px; width: 100%; text-align: left;">
+                        <label for="jarvis-task-select" style="font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize Jarvis Context:</label>
+                        <select id="jarvis-task-select" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
+                            <option value="coding">Software Coding & Debugging</option>
+                            <option value="research">Web Research & Fact Checking</option>
+                            <option value="writing">Content Writing & Editing</option>
+                            <option value="general">General Task Assistance</option>
+                        </select>
                     </div>
+
+                    <button id="start-btn-jarvis" class="pre-call-start" style="background: #0f172a; border: 1px solid #334155;">🖥️ Launch Jarvis</button>
+                </div>
+
+                <div id="start-screen" class="start-screen pre-call-card" style="flex: 1; min-width: 280px; margin: 0;">
+                    <span class="mode-badge mode-badge-diy">DIY Mode</span>
+                    <div class="pre-call-logo"><img src="./public/diy.png" alt="DIY Fix"></div>
+                    <div id="token-error-banner" class="token-error-alert" style="display: none;"></div>
+                    
+                    <h2 style="margin-top: 12px; font-size: 20px; font-weight: 800;">DIY Assistance Mode</h2>
+                    <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">Interactive real-time camera voice calling tailored to fix local physical problems, plumbing runs, pc hardware troubleshooting, or networking tasks.</p>
+
+                    <div class="skill-selection-wrapper" style="margin-bottom: 16px; width: 100%; text-align: left;">
+                        <label for="skill-select" style="font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize AI Knowledge Base:</label>
+                        <select id="skill-select" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
+                            <option value="general">General Troubleshooting (Default)</option>
+                            <option value="plumbing">Plumbing & Water Flow Systems</option>
+                            <option value="pc_hardware">PC Systems & Diagnostics Hardware</option>
+                            <option value="automotive">Basic Mechanical & Small Engine Repair</option>
+                            <option value="networking">Home Networks & Component Wiring</option>
+                        </select>
+                    </div>
+                    
+                    <button id="start-btn-diy" class="pre-call-start">📞 Start DIY Call</button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="app-footer">
+            <div class="liability-risk-banner">
+                <div class="banner-text">
+                    <strong>Critical Guardrails:</strong> Do not execute instructions on live main utility distribution feeds, open pressurized pipelines, or loaded structural beams. Highly specialized or hazardous jobs require a <strong>licensed structural technician</strong>.
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- First Time Profiles Identity Setup Modal Component -->
     <div id="name-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; align-items: center; justify-content: center;">
         <div style="background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
             <h3 style="color: #f8fafc; margin-top: 0; margin-bottom: 8px; font-size: 18px;">What should I call you?</h3>
@@ -163,7 +211,6 @@
         </div>
     </div>
 
-    <!-- Safety Declarations Modal Overlay Screen Component -->
     <div id="disclaimer-overlay" class="disclaimer-overlay" style="display: none;">
         <div class="disclaimer-card">
             <h3>⚠️ Safety and Liability Warning</h3>
@@ -184,7 +231,6 @@
         </div>
     </div>
 
-    <!-- Active Ongoing Stream Management Overlay Bar Component -->
     <div id="call-bar" class="call-bar" style="display: none;">
         <button id="flip-btn" class="call-btn" title="Flip Camera">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28">
