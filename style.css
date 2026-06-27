@@ -21,7 +21,7 @@ body {
     font-family: 'Inter', sans-serif;
     background: var(--white);
     color: var(--black);
-    min-height: 130vh;
+    min-height: 100vh;
 
     /* Allow scrolling — critical for mobile */
     overflow-x: hidden;
@@ -139,7 +139,10 @@ body {
     background: var(--white);
     box-sizing: border-box;
     padding: 2rem 1.5rem 2rem;
+    margin-bottom: 3em;
 }
+
+
 
 /* Cards row — side-by-side on desktop, stacked on mobile */
 .cards-row {
@@ -150,6 +153,8 @@ body {
     width: 100%;
     max-width: 800px;
 }
+
+
 
 /* Remove fixed/inset layout from these so they sit side-by-side */
 .start-screen,

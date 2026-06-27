@@ -130,33 +130,43 @@
         </div>
 
         <div id="error-message" class="error-toast"></div>
-        
-        <div class="start-container" style="display: flex; flex-direction: column; gap: 24px; max-width: 900px; width: 100%; margin: 0 auto; padding: 20px; box-sizing: border-box; align-items: center;">
-            
+
+        <div class="start-container">
+
             <!-- Shared Greeting Header above both cards -->
             <div class="shared-greeting-header">
                 <span id="shared-greeting" class="shared-greeting-text">Welcome</span>
                 <p class="shared-greeting-sub" style="margin-bottom: 12px;">What would you like help with today?</p>
-                <div class="header-tokens-wrapper" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; background: rgba(15, 23, 42, 0.05); padding: 6px 16px; border-radius: 50px; border: 1px solid var(--gray-200);">
+                <div class="header-tokens-wrapper"
+                    style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; background: rgba(15, 23, 42, 0.05); padding: 6px 16px; border-radius: 50px; border: 1px solid var(--gray-200);">
                     <span style="font-weight: 600; color: var(--gray-600);">Tokens:</span>
                     <span id="token-display" style="font-weight: 800; color: var(--black);">---</span>
-                    <a href="refill.html" class="pre-call-refill" style="margin-left: 8px; font-weight: 700; color: #2563eb; text-decoration: none;">+ Buy Tokens</a>
+                    <a href="refill.html" class="pre-call-refill"
+                        style="margin-left: 8px; font-weight: 700; color: #2563eb; text-decoration: none;">+ Buy
+                        Tokens</a>
                 </div>
-                <div id="token-warning" class="token-warning-alert" style="display: none; margin-top: 8px; font-size: 12px; color: #b45309;"></div>
+                <div id="token-warning" class="token-warning-alert"
+                    style="display: none; margin-top: 8px; font-size: 12px; color: #b45309;"></div>
             </div>
 
             <div style="display: flex; gap: 24px; width: 100%; flex-wrap: wrap; justify-content: center;">
-            
-                <div id="jarvis-screen" class="jarvis-screen pre-call-card" style="flex: 1; min-width: 280px; margin: 0;">
+
+                <div id="jarvis-screen" class="jarvis-screen pre-call-card"
+                    style="flex: 1; min-width: 280px; margin: 0;">
                     <span class="mode-badge mode-badge-jarvis">Jarvis Mode</span>
                     <div class="pre-call-logo"><img src="./public/jarvis.png" alt="Jarvis AI"></div>
-                    
+
                     <h2 style="margin-top: 12px; font-size: 20px; font-weight: 800;">Jarvis Workspace Mode</h2>
-                    <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">AI companion watches your screen workflow in real-time, reviewing code syntax, identifying logic gaps, and detailing terminal error tracking via audio.</p>
-                    
+                    <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">AI companion
+                        watches your screen workflow in real-time, reviewing code syntax, identifying logic gaps, and
+                        detailing terminal error tracking via audio.</p>
+
                     <div class="skill-selection-wrapper" style="margin-bottom: 16px; width: 100%; text-align: left;">
-                        <label for="jarvis-task-select" style="font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize Jarvis Context:</label>
-                        <select id="jarvis-task-select" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
+                        <label for="jarvis-task-select"
+                            style="font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize
+                            Jarvis Context:</label>
+                        <select id="jarvis-task-select"
+                            style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
                             <option value="coding">Software Coding & Debugging</option>
                             <option value="research">Web Research & Fact Checking</option>
                             <option value="writing">Content Writing & Editing</option>
@@ -164,20 +174,26 @@
                         </select>
                     </div>
 
-                    <button id="start-btn-jarvis" class="pre-call-start" style="background: #0f172a; border: 1px solid #334155;">🖥️ Launch Jarvis</button>
+                    <button id="start-btn-jarvis" class="pre-call-start"
+                        style="background: #0f172a; border: 1px solid #334155;">🖥️ Launch Jarvis</button>
                 </div>
 
                 <div id="start-screen" class="start-screen pre-call-card" style="flex: 1; min-width: 280px; margin: 0;">
                     <span class="mode-badge mode-badge-diy">DIY Mode</span>
                     <div class="pre-call-logo"><img src="./public/diy.png" alt="DIY Fix"></div>
                     <div id="token-error-banner" class="token-error-alert" style="display: none;"></div>
-                    
+
                     <h2 style="margin-top: 12px; font-size: 20px; font-weight: 800;">DIY Assistance Mode</h2>
-                    <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">Interactive real-time camera voice calling tailored to fix local physical problems, plumbing runs, pc hardware troubleshooting, or networking tasks.</p>
+                    <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 16px;">Interactive
+                        real-time camera voice calling tailored to fix local physical problems, plumbing runs, pc
+                        hardware troubleshooting, or networking tasks.</p>
 
                     <div class="skill-selection-wrapper" style="margin-bottom: 16px; width: 100%; text-align: left;">
-                        <label for="skill-select" style="font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize AI Knowledge Base:</label>
-                        <select id="skill-select" style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
+                        <label for="skill-select"
+                            style="font-size: 11px; font-weight: bold; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Optimize
+                            AI Knowledge Base:</label>
+                        <select id="skill-select"
+                            style="width: 100%; padding: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 14px; font-weight: 500; outline: none; cursor: pointer;">
                             <option value="general">General Troubleshooting (Default)</option>
                             <option value="plumbing">Plumbing & Water Flow Systems</option>
                             <option value="pc_hardware">PC Systems & Diagnostics Hardware</option>
@@ -185,7 +201,7 @@
                             <option value="networking">Home Networks & Component Wiring</option>
                         </select>
                     </div>
-                    
+
                     <button id="start-btn-diy" class="pre-call-start">📞 Start DIY Call</button>
                 </div>
 
@@ -196,18 +212,26 @@
         <div class="app-footer">
             <div class="liability-risk-banner">
                 <div class="banner-text">
-                    <strong>Critical Guardrails:</strong> Do not execute instructions on live main utility distribution feeds, open pressurized pipelines, or loaded structural beams. Highly specialized or hazardous jobs require a <strong>licensed structural technician</strong>.
+                    <strong>Critical Guardrails:</strong> Do not execute instructions on live main utility distribution
+                    feeds, open pressurized pipelines, or loaded structural beams. Highly specialized or hazardous jobs
+                    require a <strong>licensed structural technician</strong>.
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="name-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; align-items: center; justify-content: center;">
-        <div style="background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+    <div id="name-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; align-items: center; justify-content: center;">
+        <div
+            style="background: #1e293b; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
             <h3 style="color: #f8fafc; margin-top: 0; margin-bottom: 8px; font-size: 18px;">What should I call you?</h3>
-            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px;">Please customize your display identity profile name.</p>
-            <input type="text" id="modal-name-input" placeholder="Your Name" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; font-size: 16px; box-sizing: border-box; margin-bottom: 16px; outline: none;"/>
-            <button id="modal-name-submit" style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">Save and Proceed</button>
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px;">Please customize your display identity
+                profile name.</p>
+            <input type="text" id="modal-name-input" placeholder="Your Name"
+                style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; font-size: 16px; box-sizing: border-box; margin-bottom: 16px; outline: none;" />
+            <button id="modal-name-submit"
+                style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">Save
+                and Proceed</button>
         </div>
     </div>
 
@@ -216,12 +240,16 @@
             <h3>⚠️ Safety and Liability Warning</h3>
             <div class="disclaimer-body">
                 <p>CallIt provides experimental real-time AI guidance for educational and troubleshooting use cases.</p>
-                <p><strong>If your task involves structural utility frameworks (high-voltage electrical lines, pressurized gas lines, primary sewage lines, or complex automotive machinery), you must notify and hire a licensed professional engineer.</strong></p>
-                <p>By proceeding, you explicitly assume all risk and acknowledge that conversations are logged for regulatory and safety compliance audits.</p>
+                <p><strong>If your task involves structural utility frameworks (high-voltage electrical lines,
+                        pressurized gas lines, primary sewage lines, or complex automotive machinery), you must notify
+                        and hire a licensed professional engineer.</strong></p>
+                <p>By proceeding, you explicitly assume all risk and acknowledge that conversations are logged for
+                    regulatory and safety compliance audits.</p>
             </div>
             <div class="disclaimer-ack">
                 <label>
-                    <input type="checkbox" id="disclaimer-checkbox"> I understand, accept the liability limits, and wish to proceed.
+                    <input type="checkbox" id="disclaimer-checkbox"> I understand, accept the liability limits, and wish
+                    to proceed.
                 </label>
             </div>
             <div class="disclaimer-actions">
@@ -234,14 +262,17 @@
     <div id="call-bar" class="call-bar" style="display: none;">
         <button id="flip-btn" class="call-btn" title="Flip Camera">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="28" height="28">
-                <path d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                <path
+                    d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
                 <path d="M12 10.5l-3 3h2.25v3h1.5v-3H15z" opacity=".6" />
             </svg>
         </button>
 
         <button id="stop-btn" class="call-btn call-btn-hangup" title="End Call">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32" height="32">
-                <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.21 2.2z" transform="rotate(135 12 12)" />
+                <path
+                    d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.21 2.2z"
+                    transform="rotate(135 12 12)" />
             </svg>
         </button>
     </div>
