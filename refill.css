@@ -1,0 +1,164 @@
+/* Core Variables Setup */
+:root {
+    --bg-dark: #0f172a;
+    --bg-light: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #cbd5e1;
+    --primary-blue: #2563eb;
+    --pro-blue: #38bdf8;
+    /* Light blue accent for Best Buy */
+    --pro-bg: #f0f9ff;
+    /* Soft background hue for Best Buy card */
+}
+
+/* Layout Elements */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.refill-container {
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 2rem;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.balance-display {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    border-bottom: 2px solid var(--border-color);
+    display: inline-block;
+    padding-bottom: 0.5rem;
+}
+
+/* Pricing Grid Config */
+.packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.package-card {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.package-card:hover {
+    transform: translateY(-4px);
+}
+
+.package-card h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.package-price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 1.5rem 0 0.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.token-amount {
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+/* Best Buy Special Accentuation Tiers */
+.package-card.best-buy {
+    border-color: var(--pro-blue);
+    background-color: var(--pro-bg);
+    box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15);
+}
+
+.package-card.best-buy .package-price {
+    border-bottom-color: var(--pro-blue);
+}
+
+.badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--pro-blue);
+    color: #0369a1;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 0.25rem 1rem;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+}
+
+/* Interactive Buttons */
+.btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--text-main);
+    color: var(--bg-light);
+}
+
+.btn-primary:hover {
+    background-color: #334155;
+}
+
+.btn-pro {
+    background-color: var(--pro-blue);
+    color: #ffffff;
+}
+
+.btn-pro:hover {
+    background-color: #0ea5e9;
+}
+
+.navigation-footer {
+    margin-top: 3rem;
+}
+
+.link-btn {
+    color: var(--text-main);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.link-btn:hover {
+    text-decoration: underline;
+}
