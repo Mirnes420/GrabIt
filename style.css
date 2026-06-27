@@ -22,6 +22,7 @@ body {
     background: var(--white);
     color: var(--black);
     min-height: 100vh;
+    margin-bottom: 10%;
     /* Allow scrolling — critical for mobile */
     overflow-x: hidden;
     overflow-y: auto;
@@ -125,7 +126,8 @@ body {
 
 /* ── Pre-session start screen ───────────────────────────── */
 .start-container {
-    position: relative;     /* Creates stacking context — must sit above position:fixed camera-feed */
+    position: relative;
+    /* Creates stacking context — must sit above position:fixed camera-feed */
     z-index: 1;
     display: flex;
     flex-direction: column;
