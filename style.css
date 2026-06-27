@@ -21,8 +21,8 @@ body {
     font-family: 'Inter', sans-serif;
     background: var(--white);
     color: var(--black);
-    min-height: 100vh;
-    margin-bottom: 10%;
+    min-height: 130vh;
+
     /* Allow scrolling — critical for mobile */
     overflow-x: hidden;
     overflow-y: auto;
